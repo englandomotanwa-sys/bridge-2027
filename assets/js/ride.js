@@ -156,28 +156,30 @@ document.querySelectorAll('main>section.band').forEach((sec, k) => {
 });
 document.querySelectorAll('main>section .sta b').forEach((b, i) => b.textContent = String(i + 1).padStart(2, '0'));
 
-/* ================= 104 riders ================= */
+/* ================= supporters as riders (count comes from content.js) ================= */
 {
-  const seats = $('seats'); seats.innerHTML = '<i></i>'.repeat(104); const dots = [...seats.children]; let filled = false;
+  const sm = X.metric('supporters'); const N = sm ? sm.value : 0;
+  const seats = $('seats');
+  if (seats && N) {
+  seats.innerHTML = '<i></i>'.repeat(N); const dots = [...seats.children]; let filled = false;
   const fill = () => { if (filled) return; filled = true; let k = 0; const order = dots.map((_, i) => i).sort(() => Math.random() - 0.5);
-    const t = setInterval(() => { for (let j = 0; j < 3 && k < 104; j++, k++) dots[order[k]].classList.add('on'); $('riderCnt').textContent = k + ' riders'; if (k % 12 === 0) beep(900 + k * 3, 0.03); if (k >= 104) { clearInterval(t); $('riderCnt').textContent = '104 riders · FULL'; chime(true); } }, 40); };
-  if (still) { dots.forEach((d) => d.classList.add('on')); $('riderCnt').textContent = '104 riders · FULL'; }
+    const t = setInterval(() => { for (let j = 0; j < 3 && k < N; j++, k++) dots[order[k]].classList.add('on'); $('riderCnt').textContent = k + ' riders'; if (k % 12 === 0) beep(900 + k * 3, 0.03); if (k >= N) { clearInterval(t); $('riderCnt').textContent = N + ' riders · FULL'; chime(true); } }, 40); };
+  if (still) { dots.forEach((d) => d.classList.add('on')); $('riderCnt').textContent = N + ' riders · FULL'; }
   else new IntersectionObserver((es, o) => es.forEach((e) => { if (e.isIntersecting) { fill(); o.disconnect(); } }), { threshold: 0.5 }).observe(seats);
+  }
 }
 
 /* ================= demand: fall comparison only when its basis is confirmed ================= */
 {
   const f = B.fall2026 || {}, spring = X.metric('apps');
   const build = (el, n) => { const cars = Math.ceil(n / 12); el.innerHTML = Array.from({ length: cars }, (_, c) => `<div class="tcar">${Array.from({ length: 12 }, (_, k) => `<i class="${c * 12 + k < n ? 'on' : ''}"></i>`).join('')}</div>`).join(''); };
-  build($('carsSpring'), spring ? spring.value : 102);
+  build($('carsSpring'), spring ? spring.value : 101);
   if (f.basis === 'applications' && f.value) {
     $('trowFall').hidden = false; $('x5').hidden = false; $('fallN').textContent = f.value; build($('carsFall'), f.value);
     const ratio = Math.round((spring.value / f.value) * 10) / 10;
     $('x5').innerHTML = `<span>~${Math.round(ratio)}x</span> in one season`;
     $('demandLede').innerHTML = `Last fall, ${f.value} students applied. This spring, more than 100 did. <strong>Demand is not the problem. Capacity is.</strong> Every partner adds room on the train: another workshop seat, another mentor table, another bus to a campus.`;
     $('trains').setAttribute('aria-label', `Applications grew from ${f.value} in fall 2026 to ${spring.display} in spring 2027`);
-  } else if (f.basis === 'fellows' && f.value) {
-    $('demandLede').insertAdjacentHTML('beforeend', ` <span class="aside">For context, the fall 2026 cohort had ${f.value} Impact Scholars.</span>`);
   }
   const run = () => { [...document.querySelectorAll('.tcar')].forEach((c, i) => setTimeout(() => { c.classList.add('in'); if (i % 3 === 0) click(); }, still ? 0 : i * 110)); };
   new IntersectionObserver((es, o) => es.forEach((e) => { if (e.isIntersecting) { run(); o.disconnect(); } }), { threshold: 0.4 }).observe($('trains'));
@@ -226,13 +228,18 @@ const asc = (t) => String(t).replace(/[–—]/g, '-').replace(/[·•]/g, '-').
   let deb; $('flapName').addEventListener('input', (e) => { clearTimeout(deb); deb = setTimeout(() => { const v = e.target.value.trim(); showF(v ? v + ' STN' : cycle[0]); if (v) { $('orgName').value = v; render(); } }, 350); });
 }
 
-/* ================= partnership builder ================= */
+/* ================= partnership builder =================
+   The builder only collects selections. All money, titles, benefits and checkout rules come from X.rules (common.js). */
 const form = $('pform');
-const pick = new Map(), others = new Set(); let season = false, own = 0, chosenTier = '';
+const R2 = X.rules;
+const pick = new Map(), others = new Set();
+let season = null, present = null, inst = false, instAmt = '', giftRaw = '', recog = 'name', chosenTier = '', pendingSeason = null, reviewed = false;
 const rows = $('rows');
-const ladder = B.tiers.map((t) => [t.amount, t.name, t.benefits.find((b) => !/^Everything in/.test(b)) || t.blurb]);
-rows.innerHTML = stops.map((s, i) => `<div class="brow" data-i="${i}"><span class="n" aria-hidden="true">${i + 1}</span><span><b>${esc(s.n)}</b><small>${esc(s.d)} · ${esc(B.programStatus[s.status])}</small></span><span class="seg" role="group" aria-label="Amount for ${esc(s.n)}"><button type="button" aria-pressed="true" data-v="0">Skip</button><button type="button" aria-pressed="false" data-v="250">$250</button><button type="button" aria-pressed="false" data-v="500">$500</button><button type="button" aria-pressed="false" data-v="other">Other</button></span><label class="amt" hidden><span>$</span><input type="number" inputmode="numeric" min="1" step="1" placeholder="Your amount" aria-label="Your amount for ${esc(s.n)}"></label></div>`).join('');
+rows.innerHTML = stops.map((s, i) => `<div class="brow" data-i="${i}"><span class="n" aria-hidden="true">${i + 1}</span><span><b>${esc(s.n)}</b><small>${esc(s.d)} · ${esc(B.programStatus[s.status])}</small></span><span class="seg" role="group" aria-label="Support for ${esc(s.n)}"><button type="button" aria-pressed="true" data-v="0">Skip</button><button type="button" aria-pressed="false" data-v="250">$250</button><button type="button" aria-pressed="false" data-v="500">$500</button><button type="button" aria-pressed="false" data-v="other">Other</button></span><label class="amt" hidden><span>$</span><input type="text" inputmode="decimal" placeholder="Amount" aria-label="Program gift amount for ${esc(s.n)}"></label><span class="rmsg" aria-live="polite"></span></div>`).join('');
 $('mini').innerHTML = stops.map((_, i) => `${i ? '<i></i>' : ''}<b></b>`).join('');
+$('presentSel').insertAdjacentHTML('beforeend', stops.map((s, i) => `<option value="${i}">${esc(s.n)} (${esc(s.d)})</option>`).join(''));
+const seasonTiers = B.tiers.filter((t) => t.track === 'season');
+$('seasonPk').innerHTML = `<label class="sznpk"><input type="radio" name="seasonpk" value="" checked><span><b>No season package</b></span></label>` + seasonTiers.map((t) => `<label class="sznpk"><input type="radio" name="seasonpk" value="${t.id}"><span><b>${esc(t.name)} · ${tierLabel(t)}</b><small>${esc(t.blurb)}${t.approval ? ' Requires approval.' : ''}</small></span></label>`).join('');
 
 /* step 2 fields from content.js */
 {
@@ -248,56 +255,98 @@ $('mini').innerHTML = stops.map((_, i) => `${i ? '<i></i>' : ''}<b></b>`).join('
 }
 
 let shown = 0, rangeTouched = false;
-function total() { return (season ? 1000 : [...pick.values()].reduce((a, b) => a + b, 0)) + own; }
-function items() {
-  const kind = $('kind').value.trim();
-  return (season ? ['Season pass, all programs, $1,000'] : [...pick].filter(([, v]) => v > 0).sort((a, b) => a[0] - b[0]).map(([i, v]) => `${stops[i].n} (${stops[i].d}), ${money(v)}`)).concat(own ? [`Season gift, ${money(own)}`] : []).concat(kind ? [`In-kind: ${kind}`] : []);
+const amtMsg = { invalid: 'Use numbers only.', negative: 'Amounts cannot be negative.', rounded: 'Rounded to the nearest dollar.', capped: 'For amounts this large, please talk with us. Capped at $1,000,000 here.' };
+function selection() {
+  return { programs: [...pick].map(([i, amount]) => ({ i, amount })), presentProgram: present, season, institutional: inst, institutionalAmount: instAmt, gift: giftRaw, inkind: $('kind').value, recognition: recog };
 }
+function evaluate() { return R2.evaluate(selection()); }
+window.__bridgeBuilder = { evaluate, selection };   // read-only hook for automated tests
 function render() {
-  const tot = total(), kind = $('kind').value.trim(), on = (i) => season || (pick.get(i) > 0);
-  rows.querySelectorAll('.brow').forEach((r, i) => { r.classList.toggle('on', on(i)); const o = others.has(i); r.querySelector('.amt').hidden = season || !o;
-    r.querySelectorAll('button').forEach((b) => { const v = b.dataset.v; b.setAttribute('aria-pressed', season ? 'false' : v === 'other' ? String(o) : String(!o && (pick.get(i) || 0) === +v)); }); });
+  const r = evaluate(), tot = r.total, on = (i) => (R2.parseAmount(pick.get(i)).value > 0) || present === i;
+  rows.querySelectorAll('.brow').forEach((row, i) => {
+    row.classList.toggle('on', on(i)); const o = others.has(i), v = pick.get(i);
+    row.querySelector('.amt').hidden = !o;
+    row.querySelectorAll('button').forEach((b) => { const bv = b.dataset.v; b.setAttribute('aria-pressed', bv === 'other' ? String(o) : String(!o && (bv === '0' ? !v : +v === +bv))); });
+    const pa = R2.parseAmount(v), pk = o && pa.value ? R2.programPackage(pa.value) : null;
+    row.querySelector('.rmsg').textContent = o ? (amtMsg[pa.note] || (pa.value ? (pk ? pk.name : 'Program gift, no package') : '')) : '';
+  });
   const dots = $('mini').querySelectorAll('b'), segs = $('mini').querySelectorAll('i');
   dots.forEach((d, i) => d.classList.toggle('on', on(i))); segs.forEach((g, i) => g.classList.toggle('on', on(i) && on(i + 1)));
   const from = shown, t0 = performance.now(); shown = tot;
-  const step = (t) => { const k = still ? 1 : Math.min(1, (t - t0) / 500); $('total').textContent = '$' + Math.round(from + (tot - from) * (1 - (1 - k) ** 3)).toLocaleString(); if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step);
-  const n = season ? stops.length : [...pick.values()].filter((v) => v > 0).length;
-  $('tdesc').textContent = season ? 'Season pass: every program on the line.' : n ? `${n} program${n > 1 ? 's' : ''} on the BRIDGE Line${own ? ', plus a season gift' : ''}.` : own ? 'A season gift for the whole line.' : kind ? 'An in-kind partnership. We love it.' : chosenTier ? 'A conversation about ' + chosenTier + '.' : 'Choose a program or name your own amount.';
-  const list = items(); $('tlist').innerHTML = list.map((x) => `<li>${esc(x)}</li>`).join('');
-  const pct = Math.min(100, tot / B.goals.amount * 100); $('gbar').style.width = pct + '%';
-  $('gtxt').textContent = tot ? `Your selections equal ${pct % 1 ? pct.toFixed(1) : pct}% of the spring goal.` : `The spring goal funds all ${stops.length} programs on the line.`;
-  const org = $('orgName').value.trim(), firstStop = season ? 'the whole BRIDGE Line' : ([...pick].filter(([, v]) => v > 0).sort((a, b) => a[0] - b[0]).map(([i]) => stops[i].n)[0] || '');
-  $('yourSign').hidden = !(org && (firstStop || own)); $('ysStop').textContent = firstStop || 'The 2027 season'; $('ysOrg').textContent = org;
-  const nextL = ladder.find(([v]) => tot < v), got = ladder.filter(([v]) => tot >= v);
-  $('unlock').innerHTML = ladder.map(([v, nm, d], k) => `<div class="${tot >= v ? 'got' : ''}"><i aria-hidden="true"></i><span>${esc(nm)} · ${esc(d)}</span><b>${tierLabel(B.tiers[k])}</b></div>`).join('') + (nextL ? `<p>${tot ? `Add ${money(nextL[0] - tot)} to reach ${esc(nextL[1])}.` : ''}</p>` : '<p>You have reached Institutional Impact Partner. Let\'s design it together.</p>');
-  if (render.lastTier !== undefined && got.length > render.lastTier) { beep(1320, 0.06, 3); confetti(60); say('Upgrade unlocked: ' + got[got.length - 1][1] + '.', 100); }
-  render.lastTier = got.length;
-  $('payAmt').textContent = tot ? money(tot) : 'online'; $('payNow').href = giveUrl(tot);
-  $('passBtn').setAttribute('aria-pressed', season); $('passBtn').textContent = season ? 'Season pass chosen' : 'Choose season pass';
+  const stepA = (t) => { const k = still ? 1 : Math.min(1, (t - t0) / 500); $('total').textContent = '$' + Math.round(from + (tot - from) * (1 - (1 - k) ** 3)).toLocaleString('en-US'); if (k < 1) requestAnimationFrame(stepA); }; requestAnimationFrame(stepA);
+  const progN = r.lines.filter((l) => l.kind === 'program').length;
+  $('tdesc').textContent = r.empty ? (chosenTier ? 'You asked about ' + chosenTier + '. Choose it below, or tell us in your details.' : 'Choose a program, a season package or a gift to start.')
+    : [progN ? progN + ' program' + (progN > 1 ? 's' : '') : '', r.season ? 'a season package' : '', present != null ? 'a presenting request' : '', inst ? 'an institutional conversation' : '', r.unrestricted ? 'an unrestricted gift' : '', r.inkind ? 'in-kind support' : ''].filter(Boolean).join(', ').replace(/^./, (c) => c.toUpperCase()) + '.';
+  $('tlist').innerHTML = r.lines.map((l) => `<li><span>${esc(l.kind === 'inkind' ? 'In-kind: ' + l.text : l.kind === 'program' || l.kind === 'progpresenting' ? l.program : l.title)}<small>${esc(l.designation)}</small></span><b>${l.kind === 'inkind' ? 'No $ value' : l.amount ? money(l.amount) : 'Set together'}</b></li>`).join('') || '<li class="none">Nothing selected yet.</li>';
+  $('tclassW').hidden = !r.titles.length;
+  $('tclass').innerHTML = r.titles.map((t) => `<li><b>${esc(t.name)}</b> <small>${esc(t.where)}${t.approval ? ' · requires approval' : ''}</small></li>`).join('');
+  $('tbenW').hidden = !r.benefits.length;
+  $('tben').innerHTML = r.benefits.map((b) => `<li>${esc(b.label)}<small>${esc(b.where || '')}${b.limited ? ' · limited, subject to availability' : ''}${b.approval && !b.limited ? ' · subject to review' : ''}</small></li>`).join('');
+  $('tconfW').hidden = !r.approvals.length;
+  $('tconf').innerHTML = r.approvals.map((x) => `<li>${esc(x)}</li>`).join('');
+  $('tnotes').innerHTML = r.notes.map((x) => `<p>${esc(x)}</p>`).join('');
+  $('gbar').style.width = r.goalBar + '%';
+  $('gtxt').textContent = tot ? `Your proposed support would equal ${r.goalPct}% of the ${money(B.goals.amount)} spring goal. This is a proposal, not money raised, and the goal is not a limit.` : `The goal is built as ${B.goals.builtAs}. Proposed support is never counted as raised.`;
+  const online = r.checkout.mode === 'online';
+  $('payNow').hidden = !online; $('confirmBtn').hidden = r.checkout.mode !== 'confirm';
+  if (online) { $('payAmt').textContent = money(r.checkout.amount); $('payNow').href = giveUrl(r.checkout.amount); }
+  $('payNote').textContent = online ? 'Opens our Givebutter page for an unrestricted gift. You can change the amount there; whatever you give is used where it is needed most.'
+    : r.checkout.mode === 'confirm' ? r.checkout.reason + (r.checkout.giftPart ? ' Your unrestricted portion is included in the same confirmation.' : '')
+    : 'Nothing here is reserved or charged. Unrestricted gifts can be given online. Everything else is confirmed with BRIDGE first.';
+  $('ownMsg').textContent = amtMsg[R2.parseAmount(giftRaw).note] || '';
   /* keep step 2 in sync */
   if (!rangeTouched) $('fRange').value = PF.rangeFor(tot) || '';
-  const chosenNames = season ? [...new Set(stops.map((s) => s.n))] : [...pick].filter(([, v]) => v > 0).map(([i]) => stops[i].n);
+  const chosenNames = r.lines.filter((l) => l.program).map((l) => l.program).concat(r.season ? ['Unrestricted support for the whole season'] : []);
   form.querySelectorAll('input[name=programs]').forEach((c) => { if (c.dataset.touched) return; c.checked = chosenNames.includes(c.value); });
+  /* a saved printable proposal is cleared as soon as selections change after review */
+  if (reviewed) { PF.clearProposal(); reviewed = false; }
 }
-const clamp = (x) => Math.max(0, Math.min(1e7, Math.round(+x || 0)));
-rows.addEventListener('click', (e) => { const b = e.target.closest('.seg button'); if (!b) return; const r = b.closest('.brow'), i = +r.dataset.i, v = b.dataset.v; season = false;
-  if (v === 'other') { others.add(i); pick.set(i, clamp(r.querySelector('input').value)); render(); r.querySelector('input').focus(); beep(880); return; }
-  others.delete(i); if (+v) { pick.set(i, +v); beep(1180, 0.07, 2); } else { pick.delete(i); beep(520, 0.06); } render(); });
-rows.addEventListener('input', (e) => { const r = e.target.closest('.brow'); if (!r) return; pick.set(+r.dataset.i, clamp(e.target.value)); render(); });
-$('ownAmt').addEventListener('input', (e) => { own = clamp(e.target.value); render(); });
-$('quick').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; own = +b.dataset.q; $('ownAmt').value = own; beep(1180, 0.07, 2); render(); });
+rows.addEventListener('click', (e) => { const b = e.target.closest('.seg button'); if (!b) return; const row = b.closest('.brow'), i = +row.dataset.i, v = b.dataset.v;
+  if (v === 'other') { others.add(i); pick.set(i, row.querySelector('input').value); render(); row.querySelector('input').focus(); beep(880); return; }
+  others.delete(i); row.querySelector('input').value = ''; if (+v) { pick.set(i, +v); beep(1180, 0.07, 2); } else { pick.delete(i); beep(520, 0.06); } render(); });
+rows.addEventListener('input', (e) => { const row = e.target.closest('.brow'); if (!row) return; pick.set(+row.dataset.i, e.target.value); render(); });
+$('ownAmt').addEventListener('input', (e) => { giftRaw = e.target.value; render(); });
+$('quick').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; giftRaw = b.dataset.q; $('ownAmt').value = giftRaw; beep(1180, 0.07, 2); render(); });
+$('presentSel').addEventListener('change', (e) => { present = e.target.value === '' ? null : +e.target.value; render(); });
+$('instChk').addEventListener('change', (e) => { inst = e.target.checked; $('instAmtL').hidden = !inst; render(); });
+$('instAmt').addEventListener('input', (e) => { instAmt = e.target.value; render(); });
+form.querySelectorAll('input[name=recog]').forEach((x) => x.addEventListener('change', () => { recog = x.value; render(); }));
 $('kind').addEventListener('input', render); $('orgName').addEventListener('input', render);
 $('fRange').addEventListener('change', () => { rangeTouched = true; });
 form.addEventListener('change', (e) => { if (e.target.name === 'programs') e.target.dataset.touched = 1; });
-$('passBtn').addEventListener('click', () => { season = !season; if (season) { beep(1180, 0.07, 3); say('Season pass accepted. Enjoy the ride.'); } render(); });
+/* choosing a season package while programs are selected asks what to do, and never silently changes the selection */
+const setSeasonRadio = (v) => form.querySelectorAll('input[name=seasonpk]').forEach((x) => { x.checked = x.value === (v || ''); });
+const hasPrograms = () => [...pick.values()].some((v) => R2.parseAmount(v).value > 0);
+$('seasonPk').addEventListener('change', (e) => {
+  const v = e.target.value || null;
+  if (v && hasPrograms() && !season) {
+    pendingSeason = v; const t = X.tierById(v), r0 = evaluate();
+    $('swD').textContent = `You have ${r0.lines.filter((l) => l.kind === 'program').length} program selection(s) totaling ${money(r0.restricted)}. ${t.name} is a separate season partnership. You can keep both, replace your programs with it, or cancel.`;
+    $('swDlg').hidden = false; $('swDlg').focus(); setSeasonRadio(season); return;
+  }
+  season = v; if (v) { beep(1180, 0.07, 3); say(X.tierById(v).name + ' selected.'); } render();
+});
+$('swDlg').addEventListener('click', (e) => { const b = e.target.closest('[data-sw]'); if (!b) return; const act = b.dataset.sw;
+  if (act === 'replace') { pick.clear(); others.clear(); rows.querySelectorAll('.amt input').forEach((x) => { x.value = ''; }); season = pendingSeason; }
+  if (act === 'keep') season = pendingSeason;
+  pendingSeason = null; $('swDlg').hidden = true; setSeasonRadio(season); render();
+  const sel = form.querySelector(`input[name=seasonpk][value="${season || ''}"]`); if (sel) sel.focus(); });
+$('swDlg').addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); pendingSeason = null; $('swDlg').hidden = true; setSeasonRadio(season); } });
+$('clearSel').addEventListener('click', () => { pick.clear(); others.clear(); season = null; present = null; inst = false; instAmt = ''; giftRaw = ''; chosenTier = '';
+  rows.querySelectorAll('.amt input').forEach((x) => { x.value = ''; }); $('ownAmt').value = ''; $('kind').value = ''; $('presentSel').value = ''; $('instChk').checked = false; $('instAmt').value = ''; $('instAmtL').hidden = true; setSeasonRadio(null); PF.clearProposal(); render(); });
 
 /* steps */
 const stepBtns = [...document.querySelectorAll('.stepper button')], stepSets = [...form.querySelectorAll('.bstep')];
 let step = 1;
+const newId = () => 'BR-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
 function collect() {
   const fd = new FormData(form), g = (k) => (fd.get(k) || '').toString().trim(), all = (k) => fd.getAll(k).map(String);
-  const tot = total();
-  return { source: 'Partnership builder', org: g('org'), name: g('name'), title: g('title'), email: g('email'), phone: g('phone'), ptype: g('ptype'), industry: g('industry'), range: g('range'), kind: g('kind'), interests: all('interests'), engagement: all('engagement'), programs: all('programs'), items: items(), total: tot, tier: chosenTier, inkind: $('kind').value.trim(), comments: g('comments') };
+  const r = evaluate();
+  const parts = [r.restricted ? money(r.restricted) + ' restricted to programs' : '', r.season ? money(r.season) + ' for the season' : '', r.institutional ? money(r.institutional) + ' institutional, set by agreement' : '', r.unrestricted ? money(r.unrestricted) + ' unrestricted' : ''].filter(Boolean).join('; ');
+  return { source: 'Partnership builder', proposalId: collect.id || (collect.id = newId()), org: g('org'), name: g('name'), title: g('title'), email: g('email'), phone: g('phone'), ptype: g('ptype'), industry: g('industry'), range: g('range'), kind: g('kind'),
+    interests: all('interests'), engagement: all('engagement'), programs: all('programs'), items: R2.describe(r), total: r.total, breakdown: parts,
+    titles: r.titles.map((t) => t.name + ' (' + t.where + ')'), benefits: r.benefits.map((b) => b.label + (b.where ? ' [' + b.where + ']' : '')), approvals: r.approvals, notes: r.notes,
+    recognition: { name: 'Recognize us by name', anonymous: 'Anonymous', none: 'No public recognition' }[recog], tier: chosenTier, inkind: r.inkind, comments: g('comments'), status: r.status, rules: R2.VERSION };
 }
 function validate() {
   const req = [['org', 'organization name'], ['name', 'your name'], ['email', 'email']], miss = [];
@@ -313,38 +362,43 @@ function goStep(n, focus = true) {
   stepBtns.forEach((b) => { if (+b.dataset.step === n) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
   if (n === 3) {
     const d = collect();
-    $('review').innerHTML = `<h3>Your partnership summary</h3><p class="rv-note">Review everything below. You can still edit it.</p>${PF.html(d)}`;
-    PF.saveForProposal(d);
+    $('review').innerHTML = `<h3>Your proposed partnership</h3><p class="rv-note">${esc(d.status)} Proposal ID ${esc(d.proposalId)}. You can still edit it.</p>${PF.html(d)}${d.benefits.length ? `<h4>Proposed benefits</h4><ul class="rvben">${d.benefits.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>` : ''}${d.notes.length ? `<div class="tnotes">${d.notes.map((x) => `<p>${esc(x)}</p>`).join('')}</div>` : ''}`;
+    PF.saveForProposal(d); reviewed = true;
     const ep = !!B.form.endpoint;
     $('sendBtn').textContent = ep ? 'Send to BRIDGE' : 'Send by email';
-    $('sendNote').textContent = ep ? 'Sends this summary directly to the BRIDGE team.' : 'Opens a ready-to-send email to ' + B.org.email + ' with this summary written in. Nothing is sent until you press send in your email.';
+    $('sendNote').textContent = (ep ? 'Sends this summary directly to the BRIDGE team.' : 'Opens a ready-to-send email to ' + B.org.email + ' with this summary written in. Nothing is sent until you press send in your email.') + ' Sending is an inquiry, not a commitment.';
     $('sendState').textContent = '';
   }
   if (focus) { const t = n === 3 ? $('review') : stepSets[n - 1].querySelector('input,select,textarea,button'); const top = document.querySelector('#build .stepper'); top.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' }); setTimeout(() => t && t.focus({ preventScroll: true }), still ? 0 : 400); }
 }
 stepBtns.forEach((b) => b.addEventListener('click', () => goStep(+b.dataset.step)));
 form.addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) goStep(+b.dataset.go); });
+$('confirmBtn').addEventListener('click', () => goStep(2));
+let sending = false;
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (sending) return;
   if (!validate()) { goStep(2); return; }
   const d = collect(), st = $('sendState'), btn = $('sendBtn');
   if (B.form.endpoint) {
-    btn.disabled = true; st.textContent = 'Sending…';
+    sending = true; btn.disabled = true; st.textContent = 'Sending…';
     const r = await PF.submit(d);
-    btn.disabled = false;
-    if (r.ok) { st.textContent = 'Received. Your summary reached the BRIDGE team, and we will reply by email.'; btn.textContent = 'Sent'; btn.disabled = true; beep(1320, 0.06, 3); }
+    sending = false; btn.disabled = false;
+    if (r.ok) { st.textContent = 'Received. Your inquiry reached the BRIDGE team, and we will reply by email. Nothing is confirmed until we agree it in writing.'; btn.textContent = 'Sent'; btn.disabled = true; beep(1320, 0.06, 3); }
     else { st.textContent = 'That did not go through. Nothing was sent. Please try again, or send it by email instead.'; PF.mailModal(PF.subject(d), PF.text(d), 'The form could not reach BRIDGE, so nothing was sent. Send your summary by email instead:'); }
   } else {
     PF.mailModal(PF.subject(d), PF.text(d));
   }
 });
 
-/* links that prefill the builder: tiers, audiences, industries, programs */
+/* links that prefill the builder. A link can point at a package, but it never selects a season or institutional package by itself. */
 function prefill(a) {
-  if (a.dataset.tier) { const t = X.tierById(a.dataset.tier); if (t) { chosenTier = t.name + ' (' + tierLabel(t) + ')'; $('fRange').value = PF.rangeFor(t.amount); rangeTouched = true; } }
+  if (a.dataset.tier) { const t = X.tierById(a.dataset.tier); if (t) { chosenTier = t.name + ' (' + tierLabel(t) + ')'; if (t.amount) { $('fRange').value = PF.rangeFor(t.amount); rangeTouched = true; }
+    if (t.track === 'institutional') { inst = true; $('instChk').checked = true; $('instAmtL').hidden = false; }
+    const box = t.track === 'season' ? $('seasonPk') : t.track === 'program' ? rows : null; if (box) box.classList.add('hint'); setTimeout(() => box && box.classList.remove('hint'), 2600); } }
   if (a.dataset.aud) { const au = B.audiences.find((x) => x.id === a.dataset.aud); if (au) $('fPtype').value = au.name; }
   if (a.dataset.industry) $('fIndustry').value = a.dataset.industry;
-  if (a.dataset.stop != null) { const i = +a.dataset.stop; if (!(pick.get(i) > 0)) { season = false; others.delete(i); pick.set(i, 250); } }
+  if (a.dataset.stop != null) { const i = +a.dataset.stop; if (!(R2.parseAmount(pick.get(i)).value > 0)) { others.delete(i); pick.set(i, 250); } }
   render();
 }
 
@@ -354,7 +408,7 @@ function confetti(n = 90) {
   for (let k = 0; k < n; k++) { const i = document.createElement('i'); i.style.left = Math.random() * 100 + 'vw'; i.style.background = cols[k % cols.length]; i.style.setProperty('--dx', (Math.random() * 30 - 15) + 'vw'); i.style.setProperty('--r', (Math.random() * 1080 - 540) + 'deg'); i.style.setProperty('--t', (1.8 + Math.random() * 1.6) + 's'); i.style.animationDelay = Math.random() * 0.4 + 's'; c.appendChild(i); }
   document.body.appendChild(c); setTimeout(() => c.remove(), 4200);
 }
-document.addEventListener('click', (e) => { if (e.target.closest('a.give,a.give-amt,#payNow')) confetti(); });
+document.addEventListener('click', (e) => { if (e.target.closest('a.give,#payNow')) confetti(); });
 render();
 
 /* ================= headlines: words rise in; whoosh when they land ================= */
@@ -363,7 +417,7 @@ if (!still) document.querySelectorAll('main>section h2').forEach((h) => {
   const walk = (n) => { [...n.childNodes].forEach((c) => { if (c.nodeType === 3) { const f = document.createDocumentFragment(); c.textContent.split(/(\s+)/).forEach((t) => { if (!t) return; if (/^\s+$/.test(t)) { f.appendChild(document.createTextNode(t)); return; } const w = document.createElement('span'); w.className = 'w'; w.style.setProperty('--wi', k++); w.textContent = t; f.appendChild(w); }); c.replaceWith(f); } else if (c.nodeType === 1 && c.tagName !== 'BR') walk(c); }); };
   walk(h);
 });
-{ const ho = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting && !gatedNow()) { whoosh(); ho.unobserve(e.target); } }), { threshold: 0.7 }); document.querySelectorAll('main>section h2').forEach((h) => ho.observe(h)); }
+/* whoosh plays only when a train actually passes (see depart), never because a headline scrolled into view */
 /* shutter clicks and books */
 { const sp = $('policy'); if (sp) new IntersectionObserver((es, o) => es.forEach((e) => { if (e.isIntersecting) { [0, 1, 2, 3, 4].forEach((k) => setTimeout(click, 900 + k * 180)); o.disconnect(); } }), { threshold: 0.35 }).observe(sp); }
 document.querySelectorAll('.shelf i').forEach((b, k) => b.style.setProperty('--k', k));
@@ -425,7 +479,7 @@ function depart(target, name) {
   wdest.textContent = 'BRIDGE LINE · NEXT STOP: ' + name.toUpperCase();
   wipeEl.classList.add('go'); flash($('wEdge'), 0); requestAnimationFrame(() => wipeEl.classList.add('near'));
   setTimeout(() => {
-    wipeEl.classList.add('rolling');
+    wipeEl.classList.add('rolling'); whoosh();
     const a = wt.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-125vw)' }], { duration: 520, easing: 'cubic-bezier(.55,0,.9,.4)', fill: 'forwards' });
     a.onfinish = () => {
       root.style.scrollBehavior = 'auto'; target.scrollIntoView(); root.style.scrollBehavior = '';

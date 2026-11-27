@@ -16,7 +16,117 @@ const store = {
 };
 const giveUrl = (n) => (B.links.givePrefill && n ? B.links.give + (B.links.give.includes('?') ? '&' : '?') + 'amount=' + n : B.links.give);
 const tierById = (id) => B.tiers.find((t) => t.id === id);
-const tierLabel = (t) => money(t.amount, t.plus);
+const tierLabel = (t) => t.amount == null ? 'Set together' : money(t.amount, t.plus);
+/* each package's benefit text comes from the central benefit list, never from "everything in the level below" */
+B.tiers.forEach((t) => { t.benefits = (t.benefitIds || []).map((id) => (B.benefits[id] || {}).label).filter(Boolean); t.online = false; });
+
+/* ======================= partnership rules engine =======================
+   Pure functions. No DOM. Used by the builder, the proposal, Partner Express, the deck and tools/test-rules.js.
+   Money, designation, title, benefits, approvals and checkout are calculated separately. */
+const rules = {};
+rules.MAX = 1000000;
+rules.VERSION = 'rules-2027-1';
+/* "1,250.50" -> 1251 (rounded, noted); "-5" -> 0 (negative); "abc" -> 0 (invalid) */
+rules.parseAmount = (raw) => {
+  const str = String(raw == null ? '' : raw).trim().replace(/[$,\s]/g, '');
+  if (!str) return { value: 0, note: '' };
+  if (!/^-?(\d+\.?\d*|\.\d+)$/.test(str)) return { value: 0, note: 'invalid' };
+  const n = Number(str);
+  if (!isFinite(n)) return { value: 0, note: 'invalid' };
+  if (n < 0) return { value: 0, note: 'negative' };
+  if (n > rules.MAX) return { value: rules.MAX, note: 'capped' };
+  const r = Math.round(n);
+  return { value: r, note: r !== n ? 'rounded' : '' };
+};
+/* the package a program amount maps to: exact published amounts only. Any other amount is a program gift. */
+rules.programPackage = (amount) => (amount === 250 ? tierById('supporter') : amount === 500 ? tierById('partner') : null);
+const RECOG = ['moment', 'progPresent', 'seasonAck', 'founding', 'seasonPresent'];
+/* sel = { programs: [{ i, amount }], presentProgram: i|null, season: tierId|null, institutional: bool,
+           institutionalAmount: n, gift: n, inkind: text, recognition: 'name'|'anonymous'|'none' } */
+rules.evaluate = (sel) => {
+  sel = sel || {};
+  const P = B.programs, out = { lines: [], titles: [], benefits: [], approvals: [], notes: [], restricted: 0, unrestricted: 0, season: 0, institutional: 0 };
+  const recog = sel.recognition || 'name';
+  const addBen = (id, where) => {
+    const b = B.benefits[id]; if (!b) return;
+    if (recog !== 'name' && RECOG.includes(id)) return;
+    if (b.stack === 'once' || b.stack === 'per-gift') { if (out.benefits.some((x) => x.id === id)) return; where = b.scope === 'per-gift' ? 'Once, for your whole commitment' : (b.scope === 'season' ? 'Spring 2027 season' : 'This partnership'); }
+    out.benefits.push({ id, label: b.label, where, scope: b.scope, limited: !!b.limited, approval: !!b.approval, duration: b.duration });
+  };
+  /* Track A: one entry per program (a Map upstream guarantees no duplicates; guard anyway) */
+  const seen = new Set();
+  (sel.programs || []).forEach(({ i, amount }) => {
+    if (seen.has(i) || !P[i]) return; seen.add(i);
+    const a = rules.parseAmount(amount).value; if (!a) return;
+    const pkg = rules.programPackage(a), p = P[i];
+    out.restricted += a;
+    out.lines.push({ kind: 'program', i, program: p.n, date: p.d, amount: a, designation: 'Restricted to ' + p.n, title: pkg ? pkg.name : 'Program gift' });
+    out.titles.push({ name: pkg ? pkg.name : 'Program gift', where: p.n, track: 'program', proposed: true });
+    (pkg ? pkg.benefitIds : ['ack']).forEach((id) => addBen(id, p.n));
+  });
+  if (sel.presentProgram != null && P[sel.presentProgram]) {
+    const t = tierById('progpresenting'), p = P[sel.presentProgram];
+    out.lines.push({ kind: 'progpresenting', i: sel.presentProgram, program: p.n, date: p.d, amount: 0, designation: 'Restricted to ' + p.n + ', amount set together', title: t.name });
+    out.titles.push({ name: t.name, where: p.n, track: 'program', proposed: true, approval: true });
+    t.benefitIds.forEach((id) => addBen(id, p.n));
+    out.approvals.push('Presenting ' + p.n + ': amount, availability and scope are set in conversation. One presenting partner per program.');
+  }
+  /* Track B: one season package at most, only when chosen */
+  if (sel.season) {
+    const t = tierById(sel.season);
+    if (t && t.track === 'season') {
+      out.season = t.amount;
+      out.lines.push({ kind: 'season', amount: t.amount, designation: 'Spring 2027 season as a whole, used across programs by BRIDGE', title: t.name });
+      out.titles.push({ name: t.name, where: 'Spring 2027 season', track: 'season', proposed: true, approval: !!t.approval });
+      t.benefitIds.forEach((id) => addBen(id));
+      if (t.approval) out.approvals.push(t.name + ' requires BRIDGE approval' + (t.id === 'seasonpresenting' ? ', and only one can exist.' : '.'));
+    }
+  }
+  /* Track C: interest in an institutional partnership is a conversation, never a checkout */
+  if (sel.institutional) {
+    const t = tierById('institutional'), a = rules.parseAmount(sel.institutionalAmount).value;
+    out.institutional = a;
+    out.lines.push({ kind: 'institutional', amount: a, designation: 'Set in a written agreement', title: t.name });
+    out.titles.push({ name: t.name, where: 'Organization-wide', track: 'institutional', proposed: true, approval: true });
+    t.benefitIds.forEach((id) => addBen(id));
+    out.approvals.push('An institutional partnership is set in a written agreement after a conversation.');
+    if (a && a < t.amount) out.notes.push('Institutional partnerships usually start at ' + money(t.amount) + '. We are glad to talk about ' + money(a) + '; the scope will be set together.');
+  }
+  /* unrestricted gift: no title */
+  const g = rules.parseAmount(sel.gift).value;
+  if (g) { out.unrestricted = g; out.lines.push({ kind: 'gift', amount: g, designation: 'Unrestricted', title: 'Unrestricted gift' }); addBen('ack'); }
+  out.inkind = String(sel.inkind || '').trim();
+  if (out.inkind) { out.lines.push({ kind: 'inkind', amount: 0, designation: 'In-kind, no dollar value assigned', title: 'In-kind contribution', text: out.inkind }); addBen('ack'); out.approvals.push('In-kind offers are confirmed with the program team before they are accepted.'); }
+  if (out.benefits.some((b) => b.limited)) out.approvals.push('Named moments and presenting acknowledgment are limited and are confirmed in writing before they are promised.');
+  if (recog !== 'name') out.notes.push(recog === 'anonymous' ? 'You asked to give anonymously, so name recognition benefits are removed. Your gift is still acknowledged privately.' : 'You asked for no public recognition, so recognition benefits are removed.');
+
+  out.total = out.restricted + out.season + out.institutional + out.unrestricted;
+  const progCount = out.lines.filter((l) => l.kind === 'program').length;
+  /* the no-arbitrage notes: totals never become titles */
+  const crossed = B.tiers.filter((t) => t.track !== 'program' && t.amount && out.total >= t.amount && !out.titles.some((x) => x.name === t.name));
+  if (crossed.length && (progCount || out.unrestricted)) {
+    const top = crossed[crossed.length - 1];
+    out.notes.push('Your total of ' + money(out.total) + ' does not make this a ' + top.name + ' partnership. Titles come only from the package you choose' + (progCount > 1 ? ', so ' + progCount + ' program sponsorships stay ' + progCount + ' program sponsorships' : '') + '.');
+  }
+  if (sel.season && progCount) out.notes.push('Your season package and your program support are separate. The season package does not add program benefits, and program support does not change your season title.');
+  if (progCount && !sel.season && progCount === P.length) out.notes.push('You selected every program individually. That is ' + progCount + ' program sponsorships, not a season package.');
+  /* checkout: only an unrestricted-only gift can be paid online, because the payment page cannot carry designations */
+  const onlyGift = out.unrestricted > 0 && out.lines.every((l) => l.kind === 'gift');
+  out.checkout = !out.lines.length ? { mode: 'none', amount: 0 }
+    : onlyGift ? { mode: 'online', amount: out.unrestricted }
+    : { mode: 'confirm', amount: out.total, giftPart: out.unrestricted, reason: 'Program, season, institutional and in-kind support is confirmed with BRIDGE first, so your designation is recorded before any payment.' };
+  out.goalPct = Math.round(out.total / B.goals.amount * 1000) / 10;   // accurate, may exceed 100
+  out.goalBar = Math.min(100, out.goalPct);                           // the bar alone caps at 100
+  out.empty = !out.lines.length;
+  out.status = 'Proposed. Not an agreement, not a reservation and not a payment.';
+  return out;
+};
+/* plain-text summary lines for email, review and proposal */
+rules.describe = (r) => r.lines.map((l) => l.kind === 'inkind' ? 'In-kind: ' + l.text
+  : l.kind === 'progpresenting' ? l.title + ', ' + l.program + ' (' + l.date + '): amount set together'
+  : l.kind === 'institutional' ? l.title + (l.amount ? ', ' + money(l.amount) : ', amount set together')
+  : l.kind === 'program' ? l.title + ', ' + l.program + ' (' + l.date + '): ' + money(l.amount)
+  : l.title + ': ' + money(l.amount));
 
 /* derived metrics stay consistent with the lists they count */
 B.metrics.forEach((m) => {
@@ -33,7 +143,7 @@ const visibleMetrics = (cat) => B.metrics.filter((m) => m.value != null && (!cat
 function binds(root = document) {
   root.querySelectorAll('[data-bind]').forEach((el) => {
     const k = el.dataset.bind;
-    const v = { email: B.org.email, name: B.org.name, mission: B.org.mission, goal: money(B.goals.amount), season: B.goals.season, tax: B.org.taxStatus.label, positioning: B.org.positioning }[k];
+    const v = { differentiator: B.org.differentiator, ein: B.org.taxStatus.ein, founded: B.org.founded, email: B.org.email, name: B.org.name, mission: B.org.mission, goal: money(B.goals.amount), season: B.goals.season, tax: B.org.taxStatus.label, positioning: B.org.positioning }[k];
     if (v != null) el.textContent = v;
   });
   root.querySelectorAll('[data-href]').forEach((el) => {
@@ -41,6 +151,7 @@ function binds(root = document) {
     if (k === 'give') el.href = giveUrl(+el.dataset.amt || 0);
     else if (k === 'email') el.href = 'mailto:' + B.org.email + (el.dataset.subject ? '?subject=' + encodeURIComponent(el.dataset.subject) : '');
     else if (k === 'prospectus') el.href = B.links.prospectusPdf;
+    else if (k === 'overview') el.href = B.links.overviewPdf;
     else if (k === 'tracker') el.href = B.links.tracker;
     else if (k === 'talk') {
       if (B.links.booking) { el.href = B.links.booking; el.target = '_blank'; el.rel = 'noopener'; }
@@ -52,7 +163,8 @@ function binds(root = document) {
 /* ---------- status chips ---------- */
 const chip = (kind, text) => `<span class="chip chip-${kind}">${esc(text)}</span>`;
 const progStatus = (p) => chip(p.status, B.programStatus[p.status] || p.status);
-const evidenceLabel = { established: 'Established activity', measured: 'Measured', intended: 'Intended outcome' };
+const evidenceLabel = { established: 'Activity', activity: 'Activity', output: 'Output', measured: 'Measured', intended: 'Intended outcome' };
+const evClass = { activity: 'established', output: 'established' };
 
 /* ---------- renderers (data-render="name") ---------- */
 const R = {};
@@ -89,7 +201,7 @@ R.model = (el) => {
       ${M.map((s, i) => `<li class="${pos[s.id]} k-${s.kind}${s.line ? ' l-' + s.line : ''}"><button role="tab" id="toc-t-${s.id}" aria-controls="toc-panel" aria-selected="${i === 2}" tabindex="${i === 2 ? 0 : -1}" data-i="${i}"><span class="ring" aria-hidden="true"></span><span class="nm">${esc(s.short)}</span></button></li>`).join('')}
     </ol>
   </div>
-  <div class="toclegend" aria-hidden="true"><span><i class="lg-est"></i>Established activity</span><span><i class="lg-mea"></i>Measured</span><span><i class="lg-int"></i>Intended outcome</span></div>
+  <div class="toclegend" aria-hidden="true"><span><i class="lg-est"></i>Activity and output</span><span><i class="lg-mea"></i>Measured</span><span><i class="lg-int"></i>Intended outcome</span></div>
   <div class="tocpanel" id="toc-panel" role="tabpanel" aria-live="polite"></div>
   <div class="tocctl"><button class="btn" type="button" id="tocPlay">Follow one investment</button><span class="tochint">Select a station, or use the arrow keys.</span></div>`;
   const panel = el.querySelector('.tocpanel'), tabs = [...el.querySelectorAll('[role=tab]')];
@@ -99,7 +211,7 @@ R.model = (el) => {
       if (!m) return '';
       return `<li class="ev ev-measured">${chip('measured', evidenceLabel.measured)}<span><b>${esc(m.display)}</b> ${esc(m.label)} <em>${esc(m.period)}</em></span></li>`;
     }
-    return `<li class="ev ev-${e.type}">${chip(e.type, evidenceLabel[e.type])}<span>${esc(String(e.text).replace('{programs}', B.programs.length))}</span></li>`;
+    return `<li class="ev ev-${e.type}">${chip(evClass[e.type] || e.type, evidenceLabel[e.type])}<span>${esc(String(e.text).replace('{programs}', B.programs.length))}</span></li>`;
   };
   const show = (i) => {
     const s = M[i];
@@ -145,7 +257,7 @@ R.impact = (el) => {
   el.innerHTML = cats.map(([c, name, sub], i) => {
     const ms = visibleMetrics(c);
     const body = ms.length
-      ? ms.map((m) => `<li><b>${esc(m.display)}</b><div><span>${esc(m.label)}</span><small>${esc(m.period)}${m.note ? ' · ' + esc(m.note) : ''}</small></div></li>`).join('')
+      ? ms.map((m) => `<li><b>${esc(m.display)}</b><div><span>${esc(m.label)}</span><small>${esc(m.period)}${m.note ? ' · ' + esc(m.note) : ''}</small><em class="mst mst-${esc(m.status)}">${esc((B.statusLabels || {})[m.status] || m.status)}</em></div></li>`).join('')
       : `<li class="none"><div><span>${esc(B.impactNotes[c] || 'Figures will appear once documented.')}</span></div></li>`;
     return `<section class="ic ic-${c}" aria-labelledby="ic-${c}"><header><span class="icn">${i + 1}</span><div><h3 id="ic-${c}">${name}</h3><small>${sub}</small></div></header><ul>${body}</ul></section>`;
   }).join('');
@@ -195,21 +307,24 @@ R.relationships = (el) => {
 
 R.org = (el) => {
   const o = B.org;
-  const docs = (B.documents || []).filter((d) => d.file);
+  const docs = B.documents || [];
+  const ds = B.documentStatus || {};
   el.innerHTML = `
   <div class="orgcol">
     <h3>Mission</h3><p>${esc(o.mission)}</p>
     ${o.foundingStory ? `<h3>How BRIDGE started</h3><p>${esc(o.foundingStory)}</p>` : ''}
     <h3>${esc(o.fellowship.name)}</h3><p>${esc(o.fellowship.summary)}</p>
+    ${o.governance ? `<h3>Governance</h3><p>${esc(o.governance.summary)}</p>` : ''}
   </div>
   <div class="orgcol">
     <dl class="orgfacts">
-      <div><dt>Legal status</dt><dd>${esc(o.taxStatus.label)}${o.taxStatus.ein ? ' · EIN ' + esc(o.taxStatus.ein) : ''}<small>${esc(o.taxStatus.detail)}</small></dd></div>
+      <div><dt>Legal status</dt><dd>${esc(o.taxStatus.label)}${o.taxStatus.ein ? ' · EIN ' + esc(o.taxStatus.ein) : ''}<small>${esc(o.taxStatus.detail)}</small>${o.legal ? `<small>${esc(o.legal)}</small>` : ''}</dd></div>
       <div><dt>Based in</dt><dd>${esc(o.city)}${o.founded ? ' · Founded ' + esc(o.founded) : ''}</dd></div>
-      <div><dt>Leadership</dt><dd>${o.leadership.map((l) => `${esc(l.name)}<small>${esc(l.role)}</small>`).join('')}</dd></div>
+      ${(o.founders || []).length ? `<div><dt>Founders</dt><dd>${o.founders.map((l) => `${esc(l.name)}<small>${esc(l.role)}</small>`).join('')}</dd></div>` : ''}
+      ${(o.team || []).length ? `<div><dt>Student leadership team</dt><dd class="team">${o.team.map((t) => `<span><b>${esc(t.role)}</b> ${esc(t.text)}</span>`).join('')}</dd></div>` : ''}
       ${o.recognition.length ? `<div><dt>Recognition</dt><dd>${o.recognition.map((r) => `${esc(r.year)} ${esc(r.name)}<small>${esc(r.from)}</small>`).join('')}</dd></div>` : ''}
       <div><dt>Contact</dt><dd><a href="mailto:${esc(o.email)}">${esc(o.email)}</a></dd></div>
-      <div><dt>Documents</dt><dd>${docs.length ? docs.map((d) => `<a href="${esc(d.file)}" target="_blank" rel="noopener">${esc(d.label)}</a>`).join('<br>') : `Our W-9 and IRS determination letter are available on request at <a href="mailto:${esc(o.email)}?subject=${encodeURIComponent('Request for BRIDGE nonprofit documents')}">${esc(o.email)}</a>.`}</dd></div>
+      <div><dt>Documents</dt><dd class="docs">${docs.map((d) => `<span>${d.file ? `<a href="${esc(d.file)}" target="_blank" rel="noopener">${esc(d.label)}</a>` : esc(d.label)}${d.value ? ' ' + esc(d.value) : ''}<em class="dst dst-${esc(d.availability)}">${esc(ds[d.availability] || d.availability)}</em></span>`).join('')}<small>Request documents at <a href="mailto:${esc(o.email)}?subject=${encodeURIComponent('Documentation request')}">${esc(o.email)}</a>.</small></dd></div>
     </dl>
   </div>`;
 };
@@ -219,21 +334,23 @@ R.costAreas = (el) => {
 };
 
 R.tiers = (el) => {
-  const station = B.tiers.filter((t) => t.online), inst = B.tiers.filter((t) => !t.online);
-  const card = (t) => `<div class="fare${t.tag ? ' hot' : ''}${t.id === 'founding' ? ' gold' : ''}">${t.tag ? `<span class="tag">${esc(t.tag)}</span>` : ''}<div class="fcard-k">${esc(t.card)}</div><div class="price">${tierLabel(t)}</div><h3>${esc(t.name)}</h3><p>${esc(t.blurb)}</p><ul>${t.benefits.map((b) => `<li>${esc(b)}</li>`).join('')}</ul><div class="farebtns"><a class="btn solid give-amt" href="${esc(giveUrl(t.amount))}" target="_blank" rel="noopener">Give ${tierLabel(t)} online</a><a class="flink" href="mailto:${esc(B.org.email)}?subject=${encodeURIComponent('BRIDGE ' + t.name + ' ' + tierLabel(t))}">or email us first</a></div></div>`;
-  const instc = (t) => `<div class="itier"><div class="it-a"><div class="fcard-k">${esc(t.card)}</div><div class="price">${tierLabel(t)}</div><h3>${esc(t.name)}</h3><p>${esc(t.blurb)}</p></div><ul>${t.benefits.map((b) => `<li>${esc(b)}</li>`).join('')}</ul><div class="it-c"><a class="btn solid" data-href="talk" href="#">Schedule a conversation</a><a class="btn" href="#build" data-tier="${t.id}">Build a proposal</a></div></div>`;
-  el.innerHTML = `<div class="fares f4">${station.map(card).join('')}</div>
-    <div class="inst"><div class="inst-h"><span class="sta"><i></i>Institutional partnerships</span><h3>For institutions ready to invest in the whole system.</h3><p>Larger partnerships start with a conversation, so what we build together fits your goals and what BRIDGE can deliver well.</p></div>${inst.map(instc).join('')}</div>
-    <p class="tiernote">${esc(B.tierNote)}</p>`;
+  const TR = B.tracks;
+  const card = (t) => `<div class="fare${t.tag ? ' hot' : ''}${t.id === 'founding' ? ' gold' : ''}">${t.tag ? `<span class="tag">${esc(t.tag)}</span>` : ''}<div class="fcard-k">${esc(t.card)}</div><div class="price${t.amount == null ? ' custom' : ''}">${tierLabel(t)}</div><h3>${esc(t.name)}</h3><p>${esc(t.blurb)}</p><ul>${t.benefits.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>${t.approval ? '<p class="appr">Requires BRIDGE approval</p>' : ''}<div class="farebtns"><a class="btn solid" href="#build" data-tier="${t.id}">${t.track === 'institutional' ? 'Start a conversation' : 'Add to my proposal'}</a></div></div>`;
+  el.innerHTML = Object.entries(TR).map(([k, tr]) => { const ts = B.tiers.filter((t) => t.track === k); return `<div class="trackgrp tg-${k}"><div class="tg-h"><span class="tlab">${esc(tr.label)}</span><h3>${esc(tr.name)}</h3><p>${esc(tr.text)}</p></div><div class="fares f${ts.length}">${ts.map(card).join('')}</div></div>`; }).join('')
+    + `<div class="trackgrp tg-gift"><div class="tg-h"><span class="tlab">No title</span><h3>${esc(B.unrestricted.name)}</h3><p>${esc(B.unrestricted.text)}</p></div><div class="giftrow"><a class="btn solid" href="${esc(giveUrl(0))}" target="_blank" rel="noopener">Give an unrestricted gift online</a><a class="btn" href="#build">Or add it to a proposal</a></div></div>`
+    + `<p class="tiernote">${esc(B.tierNote)}</p>`;
   binds(el);
 };
 
 R.fareChart = (el) => {
-  const ts = B.tiers;
-  const rows = [];
-  ts.forEach((t, i) => t.benefits.filter((b) => !/^Everything in/.test(b)).forEach((b) => rows.push([b, i])));
-  el.innerHTML = `<div class="fc-h" role="row"><span role="columnheader">Benefit</span>${ts.map((t) => `<span role="columnheader">${tierLabel(t)}</span>`).join('')}</div>` + rows.map(([b, i]) => `<div role="row"><span role="cell">${esc(b)}</span>${ts.map((t, j) => `<i role="cell" class="${j >= i ? 'y' : ''}" aria-label="${j >= i ? 'Included' : 'Not included'}"></i>`).join('')}</div>`).join('');
+  const ts = B.tiers, ids = [...new Set(ts.flatMap((t) => t.benefitIds))];
+  const scope = { 'per-program': 'Per program supported', season: 'Once, for the season', partnership: 'Once, for the partnership', 'per-gift': 'Once per commitment' };
+  el.innerHTML = `<div class="fc-h" role="row"><span role="columnheader">Benefit and how it stacks</span>${ts.map((t) => `<span role="columnheader">${esc(t.name)}<small>${tierLabel(t)}</small></span>`).join('')}</div>` + ids.map((id) => { const b = B.benefits[id]; return `<div role="row"><span role="cell">${esc(b.label)}<small>${esc(scope[b.scope])}${b.limited ? ' · limited, confirmed in writing' : ''}${b.approval && !b.limited ? ' · subject to review' : ''}</small></span>${ts.map((t) => { const y = t.benefitIds.includes(id); return `<i role="cell" class="${y ? 'y' : ''}" aria-label="${y ? 'Included' : 'Not included'}"></i>`; }).join('')}</div>`; }).join('');
   el.style.setProperty('--cols', ts.length);
+};
+
+R.partnerRules = (el) => {
+  el.innerHTML = `<div class="prules"><div><h4>How packages combine</h4><ul><li>Titles come only from the package you choose. A total never becomes a title.</li><li>Program benefits are delivered per program. Season and partnership benefits are delivered once, however many packages you hold.</li><li>A season package does not include each program's individual benefits, and program sponsorships never add up to a season package.</li><li>Named moments and presenting acknowledgment are limited, so they are confirmed in writing before they are promised.</li></ul></div><div><h4>About Founding Rider</h4><ul>${B.foundingRules.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div><h4>If a program changes</h4><p>${esc(B.changePolicy)}</p><h4>From interest to partnership</h4><ol class="lcyc">${B.lifecycle.map((x) => `<li>${esc(x)}</li>`).join('')}</ol></div></div>`;
 };
 
 R.supportTypes = (el) => {
@@ -254,7 +371,7 @@ R.audiences = (el) => {
     panel.setAttribute('aria-labelledby', 'aud-' + a.id);
     const tiers = a.tiers.map(tierById).filter(Boolean);
     const sup = a.support.map((id) => B.supportTypes.find((s) => s.id === id)).filter(Boolean);
-    panel.innerHTML = `<div><h4>Ways ${esc(a.name.toLowerCase())} take part</h4><ul>${a.ways.map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div><div><h4>Where to start</h4><ul>${tiers.map((t) => `<li><b>${tierLabel(t)}</b> ${esc(t.name)}</li>`).join('')}${sup.map((s) => `<li>${esc(s.name)}</li>`).join('')}</ul><a class="btn solid" href="#build" data-aud="${a.id}">Build your partnership</a></div>`;
+    panel.innerHTML = `<div><h4>How ${esc(a.name.toLowerCase())} take part</h4><ul>${a.ways.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>${a.steps ? `<h4>How it usually moves</h4><ol class="jsteps">${a.steps.map((w) => `<li>${esc(w)}</li>`).join('')}</ol>` : ''}</div><div><h4>Where to start</h4><ul>${tiers.map((t) => `<li><b>${tierLabel(t)}</b> ${esc(t.name)}</li>`).join('')}${sup.map((s) => `<li>${esc(s.name)}</li>`).join('')}</ul>${a.docs ? `<h4>What you may need from us</h4><ul class="jdocs">${a.docs.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}${a.time ? `<p class="jtime"><b>Typical lead time:</b> ${esc(a.time)}</p>` : ''}<a class="btn solid" href="#build" data-aud="${a.id}">Build your partnership</a></div>`;
   };
   tabs.forEach((t) => t.addEventListener('click', () => show(+t.dataset.i)));
   el.querySelector('.aud-tabs').addEventListener('keydown', (e) => {
@@ -302,7 +419,76 @@ R.pathways = (el) => {
 };
 
 R.faq = (el) => {
-  el.innerHTML = B.faq.map((f, i) => `<details${i === 0 ? ' open' : ''}><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('');
+  const G = B.faqGroups || {};
+  const groups = [...new Set(B.faq.map((f) => f.group || ''))];
+  el.innerHTML = groups.map((g) => `<div class="faqg">${G[g] ? `<h3>${esc(G[g])}</h3>` : ''}${B.faq.filter((f) => (f.group || '') === g).map((f) => `<details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('')}</div>`).join('');
+};
+
+/* ---------- institutional readiness renderers ---------- */
+R.research = (el) => {
+  el.innerHTML = B.research.map((r) => `<article class="rcard"><h3>${esc(r.claim)}</h3><p>${esc(r.text)}</p><p class="rb"><b>At BRIDGE</b> ${esc(r.bridge)}</p><cite><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.source)}</a>${r.url2 ? ` · <a href="${esc(r.url2)}" target="_blank" rel="noopener">second study</a>` : ''}</cite></article>`).join('') + `<p class="rnote">${esc(B.researchNote)}</p>`;
+};
+
+R.timeline = (el) => {
+  el.innerHTML = `<ol class="tline">${B.timeline.map((t) => `<li class="tk-${esc(t.kind)}"><span class="tdate">${esc(t.date)}</span><i aria-hidden="true"></i><div><h3>${esc(t.title)}</h3><p>${esc(t.text)}</p>${t.kind === 'plan' ? chip('planned', 'Planned') : ''}</div></li>`).join('')}</ol><p class="tnote">${esc(B.timelineNote)}</p>`;
+};
+
+R.continuity = (el) => {
+  const lab = { 'in-place': 'Operating now', 'in-progress': 'Being built' };
+  el.innerHTML = `<ul class="cont">${B.continuity.map((c) => `<li class="cs-${esc(c.status)}"><div class="ch">${chip(c.status === 'in-place' ? 'confirmed' : 'planned', lab[c.status])}<h3>${esc(c.name)}</h3></div><p>${esc(c.text)}</p></li>`).join('')}</ul>`;
+};
+
+R.portfolios = (el) => {
+  el.innerHTML = B.portfolios.map((p) => `<article class="pfo" style="--c:${p.color}"><header><span class="bul" aria-hidden="true">${esc(p.code)}</span><div><h3>${esc(p.name)}</h3><small>${p.seats} planned spring seats</small></div></header><p class="pfp">${esc(p.purpose)}</p><h4>What it runs</h4><ul>${p.activities.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><h4>Who it serves</h4><p>${esc(p.serves)}</p><h4>What we track</h4><p>${esc(p.measures)}</p></article>`).join('') + `<p class="pfnote">${esc(B.portfolioNote)}</p>`;
+};
+
+R.growth = (el) => {
+  const max = Math.max(...B.growth.map((g) => g.value));
+  el.innerHTML = B.growth.map((g) => `<div class="gr gr-${esc(g.kind)}"><span class="grl">${esc(g.label)}</span><span class="grt"><i style="--w:${(g.value / max * 100).toFixed(1)}%"></i></span><b>${g.value}</b>${g.note ? `<small>${esc(g.note)}</small>` : ''}</div>`).join('');
+};
+
+R.rooms = (el) => {
+  const ok = (f) => f && !(B.photos[f] && B.photos[f].minors);
+  el.innerHTML = B.rooms.map((r) => `<article class="room">${ok(r.img) ? `<img src="${esc(r.img)}" alt="${esc(r.alt)}" loading="lazy">` : `<div class="room-ph" aria-hidden="true"><span>${esc(r.room)}</span></div>`}<div class="room-b"><small>${esc(r.date)} · ${esc(r.place)}</small><h3>${esc(r.room)}</h3><p>${esc(r.text)}</p><p class="led">${esc(r.led)}</p></div></article>`).join('') + `<p class="roomsnote">${esc(B.roomsNote)}</p>`;
+};
+
+R.methodology = (el) => {
+  el.innerHTML = `<dl class="meth">${B.methodology.map((m) => `<div><dt>${esc(m.term)}</dt><dd>${esc(m.text)}</dd></div>`).join('')}</dl>`;
+};
+
+R.measurement = (el) => {
+  const M = B.measurement;
+  el.innerHTML = `<div class="mcol"><h3>${chip('confirmed', 'In place now')} What we track today</h3><ul>${M.current.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="mcol"><h3>${chip('planned', 'Starting spring 2027')} What we add next</h3><ul>${M.planned.map((x) => `<li>${esc(x)}</li>`).join('')}</ul><p class="mnote">${esc(M.plannedNote)}</p></div>`;
+};
+
+R.caseSupport = (el) => {
+  const C = B.caseForSupport;
+  el.innerHTML = `<ol class="caselist">${C.points.map((p, i) => `<li><span class="cn">${String(i + 1).padStart(2, '0')}</span><h3>${esc(p.k)}</h3><p>${esc(p.text)}</p></li>`).join('')}</ol><p class="casenote">${esc(C.goalNote)}</p>`;
+};
+
+R.fundingTypes = (el) => {
+  el.innerHTML = `<dl class="ftypes">${B.fundingTypes.map((f) => `<div><dt>${esc(f.name)}</dt><dd>${esc(f.text)}</dd></div>`).join('')}</dl><p class="fnote">${esc(B.fundingNote)}</p>`;
+};
+
+R.principles = (el) => {
+  el.innerHTML = B.principles.map((p) => `<li>${esc(p)}</li>`).join('');
+};
+
+R.champion = (el) => {
+  const C = B.champion;
+  el.innerHTML = `
+  <div class="chk"><h3>1 · A description you can paste</h3><p class="copytext" id="champShort">${esc(C.short)}</p><button class="btn" type="button" data-copy="champShort">Copy description</button></div>
+  <div class="chk"><h3>2 · A sample internal recommendation</h3><p class="copytext" id="champRec">${esc(C.recommendation)}</p><button class="btn" type="button" data-copy="champRec">Copy recommendation</button><small>Replace the bracketed parts before you send it.</small></div>
+  <div class="chk"><h3>3 · The funding picture</h3><p>${esc(C.funding)}</p></div>
+  <div class="chk"><h3>4 · Getting our documents</h3><ol>${C.process.map((x) => `<li>${esc(x)}</li>`).join('')}</ol><a class="btn solid" href="mailto:${esc(B.org.email)}?subject=${encodeURIComponent('Documentation request')}">Request documents</a></div>
+  <div class="chk"><h3>5 · A one-page overview</h3><p>A printable single page with the essentials, for a colleague or a review committee.</p><a class="btn solid" data-href="overview" href="${esc(B.links.overviewPdf)}" download>Download the one-page overview (PDF)</a><a class="btn" href="overview.html">Open it in the browser</a></div>`;
+  el.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
+    const t = document.getElementById(b.dataset.copy).textContent;
+    let ok = false;
+    try { await navigator.clipboard.writeText(t); ok = true; } catch (_) {}
+    b.textContent = ok ? 'Copied' : 'Select the text above to copy';
+    setTimeout(() => { b.textContent = b.dataset.copy === 'champShort' ? 'Copy description' : 'Copy recommendation'; }, 2500);
+  }));
 };
 
 R.goal = (el) => {
@@ -327,9 +513,15 @@ PF.lines = (d) => {
   if (d.industry) L.push(['Industry', d.industry]);
   if (d.kind) L.push(['Type of support', d.kind]);
   if (d.range) L.push(['Contribution range', d.range]);
-  if (d.items && d.items.length) L.push(['Selections', d.items.join('; ')]);
-  if (d.total) L.push(['Selected total', money(d.total)]);
-  if (d.tier) L.push(['Partnership level', d.tier]);
+  if (d.proposalId) L.push(['Proposal ID', d.proposalId]);
+  if (d.items && d.items.length) L.push(['Proposed selections', d.items.join('; ')]);
+  if (d.total) L.push(['Proposed total', money(d.total)]);
+  if (d.breakdown) L.push(['Designation', d.breakdown]);
+  if (d.titles && d.titles.length) L.push(['Proposed partnership titles', d.titles.join('; ')]);
+  if (d.tier) L.push(['Package asked about', d.tier]);
+  if (d.recognition) L.push(['Recognition', d.recognition]);
+  if (d.approvals && d.approvals.length) L.push(['Needs confirmation', d.approvals.join(' ')]);
+  if (d.status) L.push(['Status', d.status]);
   if (d.interests && d.interests.length) L.push(['Areas of interest', d.interests.join(', ')]);
   if (d.programs && d.programs.length) L.push(['Programs of interest', d.programs.join(', ')]);
   if (d.engagement && d.engagement.length) L.push(['Employee engagement', d.engagement.join(', ')]);
@@ -340,10 +532,20 @@ PF.lines = (d) => {
 PF.text = (d) => 'Hi BRIDGE team,\n\nHere is our partnership interest:\n\n' + PF.lines(d).map(([k, v]) => k + ': ' + v).join('\n') + '\n\nSent from the BRIDGE the District partnership page.';
 PF.subject = (d) => 'Partnership interest: ' + (d.org || 'new partner') + (d.total ? ' (' + money(d.total) + ')' : d.range ? ' (' + d.range + ')' : '');
 PF.html = (d) => `<dl class="sum">${PF.lines(d).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
+/* the printable proposal reads one saved copy. Contact details are never stored.
+   It expires after 7 days, is discarded if the rules change, and is cleared whenever selections change. */
+PF.TTL = 7 * 24 * 3600 * 1000;
 PF.saveForProposal = (d) => {
-  const { email, phone, ...safe } = d; // contact details are not stored
-  return store.set('bridge-proposal', { ...safe, savedAt: Date.now() });
+  const { email, phone, name, title, ...safe } = d;
+  return store.set('bridge-proposal', { ...safe, version: rules.VERSION, savedAt: Date.now() });
 };
+PF.loadProposal = () => {
+  const p = store.get('bridge-proposal');
+  if (!p) return null;
+  if (p.version !== rules.VERSION || !p.savedAt || Date.now() - p.savedAt > PF.TTL) { PF.clearProposal(); return null; }
+  return p;
+};
+PF.clearProposal = () => { try { localStorage.removeItem('bridge-proposal'); } catch (_) {} };
 
 /* real submission if an endpoint is configured; never reports success without a 2xx response */
 PF.submit = async (d) => {
@@ -423,7 +625,7 @@ function run() {
   if (!document.body.dataset.noMailModal) wireMailLinks();
 }
 
-window.BX = { B, $, esc, money, slug, giveUrl, tierById, tierLabel, metric, visibleMetrics, binds, chip, progStatus, PF, store, run, R };
+window.BX = { B, $, esc, money, slug, giveUrl, tierById, tierLabel, rules, metric, visibleMetrics, binds, chip, progStatus, PF, store, run, R };
 /* scripts load at the end of <body>, so the DOM is ready */
 if (document.body) run(); else document.addEventListener('DOMContentLoaded', run);
 })();

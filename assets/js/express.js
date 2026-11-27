@@ -22,17 +22,23 @@ $('xpast').innerHTML = B.pastPrograms.map((p) => `<li><b>${esc(p.n)}</b>, ${esc(
 const relPick = ['recognition', 'collaborator', 'venue', 'school', 'university'];
 $('xrel').innerHTML = B.relationships.filter((r) => relPick.includes(r.type) && r.items.length).map((r) => `<li><b>${esc(r.label)}:</b> ${r.items.map(esc).join(', ')}</li>`).join('');
 
+/* due diligence */
+$('xgov').innerHTML = `<li>${esc(B.org.legal)}</li><li>Recognized as a ${esc(B.org.taxStatus.label)}, EIN ${esc(B.org.taxStatus.ein)}. ${esc(B.org.taxStatus.detail)}</li><li>${esc(B.org.governance.summary)}</li>`;
+$('xdocs').innerHTML = B.documents.map((d) => `<li><b>${esc(d.label)}</b>${d.value ? ' ' + esc(d.value) : ''}: ${esc(B.documentStatus[d.availability])}</li>`).join('');
+$('xcont').innerHTML = B.continuity.map((c) => `<li><b>${esc(c.name)}</b> ${c.status === 'in-place' ? '' : '<em>(being built)</em> '}${esc(c.text)}</li>`).join('');
+$('xprinc').innerHTML = B.principles.map((p) => `<li>${esc(p)}</li>`).join('');
+
 /* priorities */
 $('xcost').innerHTML = B.costAreas.map((c) => `<li><b>${esc(c.name)}</b><span>${esc(c.text)}</span>${c.equivalency ? `<em>${esc(c.equivalency)}</em>` : ''}</li>`).join('');
 
 /* tiers table */
-$('xtiers').innerHTML = `<div class="xtr xth" role="row"><span role="columnheader">Level</span><span role="columnheader">Contribution</span><span role="columnheader">Highlights</span><span role="columnheader"><span class="vh">Action</span></span></div>` + B.tiers.map((t) => {
-  const hi = t.benefits.filter((b) => !/^Everything in/.test(b)).slice(0, 2).join('; ');
-  const act = t.online ? `<a class="btn solid" href="${esc(giveUrl(t.amount))}" target="_blank" rel="noopener">Give ${tierLabel(t)}</a>` : `<a class="btn" data-href="talk" href="#">Start a conversation</a>`;
-  return `<div class="xtr" role="row"><span role="cell"><b>${esc(t.name)}</b></span><span role="cell" class="xamt">${tierLabel(t)}</span><span role="cell">${esc(hi)}</span><span role="cell">${act}</span></div>`;
-}).join('');
+$('xtiers').innerHTML = `<div class="xtr xth" role="row"><span role="columnheader">Package</span><span role="columnheader">Contribution</span><span role="columnheader">What it includes</span><span role="columnheader"><span class="vh">Action</span></span></div>` + B.tiers.map((t) => {
+  const hi = t.benefitIds.filter((id) => id !== 'ack').slice(0, 2).map((id) => B.benefits[id].label).join('; ');
+  const act = `<a class="btn" href="mailto:${esc(B.org.email)}?subject=${encodeURIComponent('BRIDGE ' + t.name + ' (' + tierLabel(t) + ')')}">Ask about this</a>`;
+  return `<div class="xtr" role="row"><span role="cell"><b>${esc(t.name)}</b><small>${esc(B.tracks[t.track].label)} · ${esc(B.tracks[t.track].name)}${t.approval ? ' · requires approval' : ''}</small></span><span role="cell" class="xamt">${tierLabel(t)}</span><span role="cell">${esc(hi)}</span><span role="cell">${act}</span></div>`;
+}).join('') + `<div class="xtr" role="row"><span role="cell"><b>${esc(B.unrestricted.name)}</b><small>No title</small></span><span role="cell" class="xamt">Any amount</span><span role="cell">${esc(B.unrestricted.text)}</span><span role="cell"><a class="btn solid" href="${esc(giveUrl(0))}" target="_blank" rel="noopener">Give online</a></span></div>`;
 X.binds($('xtiers'));
-$('xtiernote').textContent = B.tierNote;
+$('xtiernote').textContent = B.tierNote + ' Program, season and institutional support is confirmed with BRIDGE before any payment, so your designation is recorded.';
 $('xways').innerHTML = B.supportTypes.map((s) => `<li>${esc(s.name)}</li>`).join('');
 
 /* express line progress */
