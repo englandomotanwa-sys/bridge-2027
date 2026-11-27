@@ -8,7 +8,7 @@ const stat = (id) => { const x = m(id); return x ? `<div><b>${esc(x.display)}</b
 const docs = B.documents.map((d) => `${esc(d.label)}${d.value ? ' ' + esc(d.value) : ''} <em>(${esc(B.documentStatus[d.availability].toLowerCase())})</em>`).join('; ');
 const lo = B.tiers[0], hi = B.tiers[B.tiers.length - 1];
 $('doc').innerHTML = `<section class="page one">
- <header class="oh"><div><p class="k">One-page overview · ${esc(B.goals.season)}</p><h1>${esc(B.org.name)}</h1><p class="opos">${esc(B.org.positioning)}</p></div>
+ <header class="oh"><div><p class="k">One-page overview · ${esc(B.goals.season)}</p><h1><img class="omono" src="assets/brand/monogram.svg" alt="">${esc(B.org.name)}</h1><p class="opos">${esc(B.org.positioning)}</p></div>
  <dl class="oid"><div><dt>Status</dt><dd>${esc(B.org.taxStatus.label)}</dd></div><div><dt>EIN</dt><dd>${esc(B.org.taxStatus.ein)}</dd></div><div><dt>Founded</dt><dd>${esc(B.org.founded)}, Washington, DC</dd></div><div><dt>Contact</dt><dd>${esc(B.org.email)}</dd></div></dl></header>
  <p class="lede">${esc(B.org.differentiator)} BRIDGE trains college students as Impact Scholars, who plan and lead career, civic and community programs and bring younger students from DC schools onto campuses and into professional rooms.</p>
  <div class="ogrid">

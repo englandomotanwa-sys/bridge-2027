@@ -9,6 +9,8 @@ if (!B) { console.warn('content.js did not load'); return; }
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = (n, plus) => '$' + Number(n).toLocaleString('en-US') + (plus ? '+' : '');
+/* text color with the better contrast on a given background (navy or white) */
+const inkOn = (hex) => { const h = String(hex).replace('#', ''); if (h.length !== 6) return '#0B1F3B'; const c = [0, 2, 4].map((i) => { const x = parseInt(h.substr(i, 2), 16) / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }); const L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; return (1.05 / (L + 0.05)) >= ((L + 0.05) / 0.1056) ? '#FFFFFF' : '#0B1F3B'; };
 const slug = (s) => String(s).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (_) { return null; } },
@@ -385,7 +387,7 @@ R.audiences = (el) => {
 
 R.pathways = (el) => {
   const P = B.pathways;
-  el.innerHTML = `<div class="pw-pylon" role="tablist" aria-label="Industry pathways" aria-orientation="vertical">${P.map((p, i) => `<button role="tab" id="pw-${p.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-i="${i}" style="--c:${p.color}"><span class="bul" aria-hidden="true">${esc(p.code)}</span><span class="pwn">${esc(p.name)}</span><small>${p.status === 'existing' ? 'Running now' : 'Proposed'}</small></button>`).join('')}</div><div class="pw-panel" role="tabpanel" aria-live="polite"></div>`;
+  el.innerHTML = `<div class="pw-pylon" role="tablist" aria-label="Industry pathways" aria-orientation="vertical">${P.map((p, i) => `<button role="tab" id="pw-${p.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-i="${i}" style="--c:${p.color}"><span class="bul" aria-hidden="true" style="background:${p.color};color:${inkOn(p.color)}">${esc(p.code)}</span><span class="pwn">${esc(p.name)}</span><small>${p.status === 'existing' ? 'Running now' : 'Proposed'}</small></button>`).join('')}</div><div class="pw-panel" role="tabpanel" aria-live="polite"></div>`;
   const tabs = [...el.querySelectorAll('[role=tab]')], panel = el.querySelector('.pw-panel');
   const show = (i) => {
     const p = P[i];
@@ -393,7 +395,7 @@ R.pathways = (el) => {
     panel.style.setProperty('--c', p.color);
     panel.setAttribute('aria-labelledby', 'pw-' + p.id);
     const progs = p.programs.map((n) => B.programs.find((x) => x.n === n)).filter(Boolean);
-    panel.innerHTML = `<div class="pw-head"><span class="bul big" aria-hidden="true">${esc(p.code)}</span><div><h3>${esc(p.name)}</h3><p class="pw-focus">${esc(p.focus)}</p></div></div>
+    panel.innerHTML = `<div class="pw-head"><span class="bul big" aria-hidden="true" style="background:${p.color};color:${inkOn(p.color)}">${esc(p.code)}</span><div><h3>${esc(p.name)}</h3><p class="pw-focus">${esc(p.focus)}</p></div></div>
       <div class="pw-status">${p.status === 'existing'
         ? `${chip('existing', 'Programming running now')}<span>On the spring line: ${progs.map((x) => `${esc(x.n)} (${esc(x.d)})`).join(', ')}</span>`
         : `${chip('proposed', 'Proposed opportunity')}<span>No BRIDGE programming in this field yet. This is a pathway we would build with a partner.</span>`}</div>
@@ -439,7 +441,7 @@ R.continuity = (el) => {
 };
 
 R.portfolios = (el) => {
-  el.innerHTML = B.portfolios.map((p) => `<article class="pfo" style="--c:${p.color}"><header><span class="bul" aria-hidden="true">${esc(p.code)}</span><div><h3>${esc(p.name)}</h3><small>${p.seats} planned spring seats</small></div></header><p class="pfp">${esc(p.purpose)}</p><h4>What it runs</h4><ul>${p.activities.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><h4>Who it serves</h4><p>${esc(p.serves)}</p><h4>What we track</h4><p>${esc(p.measures)}</p></article>`).join('') + `<p class="pfnote">${esc(B.portfolioNote)}</p>`;
+  el.innerHTML = B.portfolios.map((p) => `<article class="pfo" style="--c:${p.color}"><header><span class="bul" aria-hidden="true" style="background:${p.color};color:${inkOn(p.color)}">${esc(p.code)}</span><div><h3>${esc(p.name)}</h3><small>${p.seats} planned spring seats</small></div></header><p class="pfp">${esc(p.purpose)}</p><h4>What it runs</h4><ul>${p.activities.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><h4>Who it serves</h4><p>${esc(p.serves)}</p><h4>What we track</h4><p>${esc(p.measures)}</p></article>`).join('') + `<p class="pfnote">${esc(B.portfolioNote)}</p>`;
 };
 
 R.growth = (el) => {
@@ -500,7 +502,7 @@ R.goal = (el) => {
 const PF = {};
 PF.ranges = ['Under $250', '$250 to $999', '$1,000 to $2,499', '$2,500 to $4,999', '$5,000 to $9,999', '$10,000 or more', 'Not sure yet'];
 PF.rangeFor = (n) => !n ? '' : n < 250 ? PF.ranges[0] : n < 1000 ? PF.ranges[1] : n < 2500 ? PF.ranges[2] : n < 5000 ? PF.ranges[3] : n < 10000 ? PF.ranges[4] : PF.ranges[5];
-PF.engagement = ['Speak at a program', 'Mentor students', 'Host a site visit', 'Team volunteer day', 'Provide in-kind support', 'Make an introduction'];
+PF.engagement = ['Propose a speaker', 'Mentor students', 'Host a site visit', 'Team volunteer day', 'Provide in-kind support', 'Make an introduction'];
 PF.kinds = ['Financial', 'In-kind', 'Both', 'Expertise and time'];
 PF.validEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s);
 
@@ -625,7 +627,7 @@ function run() {
   if (!document.body.dataset.noMailModal) wireMailLinks();
 }
 
-window.BX = { B, $, esc, money, slug, giveUrl, tierById, tierLabel, rules, metric, visibleMetrics, binds, chip, progStatus, PF, store, run, R };
+window.BX = { B, $, esc, inkOn, money, slug, giveUrl, tierById, tierLabel, rules, metric, visibleMetrics, binds, chip, progStatus, PF, store, run, R };
 /* scripts load at the end of <body>, so the DOM is ready */
 if (document.body) run(); else document.addEventListener('DOMContentLoaded', run);
 })();

@@ -404,7 +404,7 @@ function prefill(a) {
 
 /* ================= confetti ================= */
 function confetti(n = 90) {
-  if (still) return; const c = document.createElement('div'); c.className = 'confetti'; c.setAttribute('aria-hidden', 'true'); const cols = ['#e4002b', '#ffb000', '#ffffff', '#2f6fd6', '#0b1a3a'];
+  if (still) return; const c = document.createElement('div'); c.className = 'confetti'; c.setAttribute('aria-hidden', 'true'); const cols = ['#E31937', '#FFC300', '#ffffff', '#0073FF', '#0B1F3B'];
   for (let k = 0; k < n; k++) { const i = document.createElement('i'); i.style.left = Math.random() * 100 + 'vw'; i.style.background = cols[k % cols.length]; i.style.setProperty('--dx', (Math.random() * 30 - 15) + 'vw'); i.style.setProperty('--r', (Math.random() * 1080 - 540) + 'deg'); i.style.setProperty('--t', (1.8 + Math.random() * 1.6) + 's'); i.style.animationDelay = Math.random() * 0.4 + 's'; c.appendChild(i); }
   document.body.appendChild(c); setTimeout(() => c.remove(), 4200);
 }

@@ -33,7 +33,7 @@ $('xcost').innerHTML = B.costAreas.map((c) => `<li><b>${esc(c.name)}</b><span>${
 
 /* tiers table */
 $('xtiers').innerHTML = `<div class="xtr xth" role="row"><span role="columnheader">Package</span><span role="columnheader">Contribution</span><span role="columnheader">What it includes</span><span role="columnheader"><span class="vh">Action</span></span></div>` + B.tiers.map((t) => {
-  const hi = t.benefitIds.filter((id) => id !== 'ack').slice(0, 2).map((id) => B.benefits[id].label).join('; ');
+  const hi = t.benefitIds.filter((id) => id !== 'ack').slice(-2).map((id) => B.benefits[id].label).join('; ');
   const act = `<a class="btn" href="mailto:${esc(B.org.email)}?subject=${encodeURIComponent('BRIDGE ' + t.name + ' (' + tierLabel(t) + ')')}">Ask about this</a>`;
   return `<div class="xtr" role="row"><span role="cell"><b>${esc(t.name)}</b><small>${esc(B.tracks[t.track].label)} · ${esc(B.tracks[t.track].name)}${t.approval ? ' · requires approval' : ''}</small></span><span role="cell" class="xamt">${tierLabel(t)}</span><span role="cell">${esc(hi)}</span><span role="cell">${act}</span></div>`;
 }).join('') + `<div class="xtr" role="row"><span role="cell"><b>${esc(B.unrestricted.name)}</b><small>No title</small></span><span role="cell" class="xamt">Any amount</span><span role="cell">${esc(B.unrestricted.text)}</span><span role="cell"><a class="btn solid" href="${esc(giveUrl(0))}" target="_blank" rel="noopener">Give online</a></span></div>`;

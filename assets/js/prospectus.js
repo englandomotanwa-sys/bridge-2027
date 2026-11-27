@@ -9,7 +9,7 @@ const T = B.programTypes;
 const proposal = /[?&]proposal=1/.test(location.search) ? X.PF.loadProposal() : null;
 const safeImg = (f) => !(B.photos[f] && B.photos[f].minors);   // keep photos of younger students out of a forwardable document
 const date = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-const foot = (n) => `<footer class="pf"><span>BRIDGE the District · Partnership Prospectus 2027</span><span>${esc(B.org.email)}</span><span>${n}</span></footer>`;
+const foot = (n) => `<footer class="pf"><span><img class="fmono" src="assets/brand/monogram.svg" alt="">BRIDGE the District · Partnership Prospectus 2027</span><span>${esc(B.org.email)}</span><span>${n}</span></footer>`;
 const ms = (ids) => ids.map((id) => X.metric(id)).filter(Boolean);
 let pg = 0;
 const page = (cls, body) => { pg++; return `<section class="page ${cls}">${body}${cls.includes('cover') ? '' : foot(pg)}</section>`; };
@@ -17,7 +17,7 @@ const page = (cls, body) => { pg++; return `<section class="page ${cls}">${body}
 const pages = [];
 /* 1. cover */
 pages.push(page('cover', `<img class="cimg" src="${safeImg('group.jpg') ? 'group.jpg' : 'cohort.jpg'}" alt="">
-  <div class="cbody"><p class="ck"><span class="dot"></span>${proposal ? 'Partnership proposal' : 'Partnership prospectus'} · 2027 season</p>
+  <div class="cbody"><div class="clock"><img src="assets/brand/monogram-reversed.svg" alt=""><span><b>BRIDGE</b> the District</span></div><p class="ck">${proposal ? 'Partnership proposal' : 'Partnership prospectus'} · ${esc(B.brand.campaign)} · ${esc(B.brand.campaignSeason)}</p>
   <h1>Come into the room.<br><em>Build it with us.</em></h1>
   <p class="csub">${esc(B.org.name)} · ${esc(B.org.positioning)}</p>
   ${proposal && proposal.org ? `<p class="cfor">Prepared for <b>${esc(proposal.org)}</b></p>` : ''}
