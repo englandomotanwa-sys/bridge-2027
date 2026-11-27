@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="BRIDGE the District monogram">
+  <title>BRIDGE the District</title>
+  <!-- B letterform -->
+  <path d="M30 16 H62 C79 16 89 25 89 38 C89 47 84 53 76 56 C88 59 96 68 96 81 C96 96 84 104 66 104 H30 Z" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="round"/>
+  <!-- Capitol dome, upper counter -->
+  <g fill="#FFFFFF">
+    <rect x="57.4" y="23" width="2.2" height="5" rx="1"/>
+    <path d="M47 45 C47 34 52 28 58.5 28 C65 28 70 34 70 45 Z"/>
+    <rect x="44" y="45" width="29" height="3.2" rx="1"/>
+    <rect x="46" y="48.2" width="2.4" height="4" /><rect x="51" y="48.2" width="2.4" height="4"/><rect x="56" y="48.2" width="2.4" height="4"/><rect x="61" y="48.2" width="2.4" height="4"/><rect x="66" y="48.2" width="2.4" height="4"/>
+  </g>
+  <!-- three routes converge into the waist of the B -->
+  <g fill="none" stroke-linecap="round" stroke-width="3.6">
+    <path d="M34.5 56 H69" stroke="#FFFFFF"/>
+    <path d="M34.5 60.5 H76" stroke="#FFFFFF"/>
+    <path d="M34.5 65 H82" stroke="#FFFFFF"/>
+  </g>
+  <!-- bridge arches, lower counter -->
+  <path fill="#FFFFFF" fill-rule="evenodd" d="M37 77 H88 V99 H37 Z M41 99 V95 A11 11 0 0 1 63 95 V99 Z M64 99 V95 A11 11 0 0 1 86 95 V99 Z"/>
+</svg>

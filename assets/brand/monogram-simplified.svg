@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="BRIDGE the District monogram">
+  <title>BRIDGE the District</title>
+  <!-- B letterform -->
+  <path d="M30 16 H62 C79 16 89 25 89 38 C89 47 84 53 76 56 C88 59 96 68 96 81 C96 96 84 104 66 104 H30 Z" fill="#F8F7F2" stroke="#0B1F3B" stroke-width="9" stroke-linejoin="round"/>
+  <!-- three routes converge into the waist of the B -->
+  <g fill="none" stroke-linecap="round" stroke-width="6.5">
+    <path d="M34.5 50 H70" stroke="#E31937"/>
+    <path d="M34.5 60.5 H80" stroke="#FFC300"/>
+    <path d="M34.5 71 H86" stroke="#0073FF"/>
+  </g>
+  <!-- bridge arches, lower counter -->
+</svg>
