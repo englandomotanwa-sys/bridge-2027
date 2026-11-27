@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://englandomotanwa-sys.github.io/bridge-2027/sitemap.xml
