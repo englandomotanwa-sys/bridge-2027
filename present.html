@@ -16,17 +16,24 @@
 <body class="deckpage" data-no-mail-modal="1">
 <div class="deck" id="deck" role="region" aria-roledescription="presentation" aria-label="BRIDGE the District partnership presentation">
  <div class="stage" id="stage"></div>
+ <noscript><p style="position:relative;z-index:5;padding:24px;color:#fff;max-width:60ch">The presentation needs JavaScript. You can read the same content in <a style="color:#ffb000" href="express.html">Partner Express</a> or the <a style="color:#ffb000" href="downloads/BRIDGE-the-District-Partnership-Prospectus-2027.pdf">prospectus PDF</a>.</p></noscript>
 </div>
-<div class="dbar" role="toolbar" aria-label="Presentation controls">
+<div class="dbar" id="dbar" role="toolbar" aria-label="Presentation controls">
  <a class="dbtn" href="index.html" title="Back to the website">‹ Website</a>
+ <ol class="droute" id="route" aria-label="Stations"></ol>
  <div class="dprog" aria-hidden="true"><i id="dfill"></i></div>
- <span class="dcount" id="dcount" aria-live="polite">1 / 11</span>
+ <span class="dcount" id="dcount" aria-live="polite">1 / 12</span>
  <button class="dbtn" id="dprev" type="button" aria-label="Previous slide">‹</button>
  <button class="dbtn" id="dnext" type="button" aria-label="Next slide">›</button>
- <button class="dbtn" id="dnotes" type="button" aria-pressed="false" title="Speaker notes (N)">Notes</button>
+ <button class="dbtn" id="dlist" type="button" aria-expanded="false" aria-controls="smenu" title="Go to a station (G)">Stations</button>
+ <button class="dbtn" id="drestart" type="button" title="Back to the first slide (Home)">Restart</button>
+ <button class="dbtn" id="dsound" type="button" aria-pressed="false" title="Sound (M)">Sound off</button>
+ <button class="dbtn" id="dnotes" type="button" aria-pressed="false" title="Notes on this screen (N)">Notes</button>
+ <button class="dbtn" id="dpv" type="button" title="Open private speaker notes in a separate window">Presenter view</button>
  <button class="dbtn" id="dfs" type="button" title="Full screen (F)">Full screen</button>
 </div>
-<aside class="notes" id="notes" hidden aria-label="Speaker notes"><b>Speaker notes</b><p id="notesText"></p><small id="timer">0:00</small></aside>
+<div class="smenu" id="smenu" hidden role="dialog" aria-label="Go to a station"><ol id="stations"></ol></div>
+<aside class="notes" id="notes" hidden aria-label="Speaker notes"><b>Speaker notes</b><small class="warn">Visible to the audience if this screen is shared. Use Presenter view for private notes.</small><p id="notesText"></p><small id="timer">0:00</small></aside>
 <script src="content.js"></script>
 <script src="assets/js/common.js"></script>
 <script src="assets/js/present.js"></script>
