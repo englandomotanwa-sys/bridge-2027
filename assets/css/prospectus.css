@@ -100,3 +100,7 @@ h1,h2,h3{font-family:Archivo,system-ui,sans-serif;margin:0;letter-spacing:-.015e
 .sum dd{margin:0;font-weight:600}
 @media print{body{background:#fff}.ptool{display:none}.doc{display:block;padding:0}.page{box-shadow:none;margin:0}}
 @media screen and (max-width:860px){.doc{justify-content:start;overflow-x:auto;padding:16px}}
+.cont{margin:6px 0 0;padding:0;list-style:none;font-size:8.5pt;line-height:1.35}
+.cont li{padding:4px 0;border-bottom:1px solid #e3ded4}
+.cont b{display:block;font-family:Archivo,sans-serif}
+.cont em{color:#7a5300;font-style:normal;font-weight:700}
