@@ -118,6 +118,23 @@ The share image (`assets/og-image.jpg`) comes from `tools/og-image.html`. Open i
 
 All other links are relative, so they keep working on the new domain.
 
+## The brand system
+
+Two identities, never merged:
+
+- **BRIDGE the District** is the permanent institution. Its logo is the B monogram (Capitol dome in the upper bowl, bridge arches in the lower bowl, red, yellow and blue routes crossing the middle) beside the wordmark. Never add a season or year to it.
+- **The BRIDGE Line** is the seasonal campaign. It uses the round "BR" line bullet, the name, and a separate season tag (for example "Spring 2027"). Change the season in `content.js` under `brand.campaignSeason`; nothing else needs editing.
+
+Logo files are in `assets/brand/`: `monogram.svg` (full color), `monogram-reversed.svg` (on navy), `monogram-circle.svg`, `monogram-simplified.svg` and `monogram-simplified-reversed.svg` (small sizes and favicons), `monogram-mono-navy.svg` and `monogram-mono-white.svg` (one color), PNG exports, and `email-signature.html`. The public guide is `brand.html` (not indexed by search engines).
+
+**Core colors** (use for identity, buttons, headings and text): BRIDGE Navy #0B1F3B, District Red #E31937, Capital Blue #0073FF, Opportunity Yellow #FFC300, District Stone #F8F7F2. For small text on light backgrounds use the darker inks #B5102A (red) and #0062D9 (blue) so contrast passes.
+
+**Route colors** (navigation only: pathway chips, map lines, station markers): Maroon #8C1D40, Green #00A651, Teal #0E9AA7, Silver #A2A9B4, Orange #F26B21, Purple #7A4FBF, Sky #5AB2FF. Do not use route colors for logos, buttons or headings.
+
+**Type:** Montserrat for headings, Inter for text, VT323 only for the departure-board displays. All are self-hosted in `assets/fonts/`, so nothing loads from Google.
+
+If an official logo file is produced, replace the SVGs in `assets/brand/` with the same file names, then rerun `tools/build-prospectus.py` and rerender the share image from `tools/og-image.html`.
+
 ## House rules for copy
 
 - No em dashes.

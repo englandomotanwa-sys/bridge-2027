@@ -1,5 +1,15 @@
 # Changelog
 
+## November 2026: brand system
+
+- New permanent identity for BRIDGE the District: the B monogram with the Capitol dome, bridge arches and three route lines, in full color, reversed, circular, simplified and one-color versions, plus favicons, a share image and an email signature.
+- The BRIDGE Line is now a separate seasonal campaign mark, and the season appears only as a tag, never inside the organization's logo.
+- Core palette and fonts standardized (Montserrat and Inter, self-hosted). Route colors are kept for navigation only.
+- The boarding gate draws the monogram as the three routes converge. Partner Express uses a quieter, more institutional style. The deck, prospectus, overview and PDFs carry the new identity.
+- Broad comparisons with other programs were replaced with verified examples of BRIDGE's own work.
+- Speaking roles are now described as proposals that BRIDGE reviews, not guaranteed benefits. Program pages list each package's benefits explicitly.
+- The opportunity tracker is described as something the founder maintains, with no usage claims.
+
 ## November 2026: partnership rules and presentation
 
 - New partnership rules engine. Titles come only from a package the partner chooses; totals never unlock titles. Three tracks (program, season, institutional) plus an unrestricted gift with no title. Every benefit has its own scope and stacking rule.
