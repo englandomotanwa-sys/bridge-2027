@@ -4,6 +4,10 @@ This site is plain HTML, CSS and JavaScript. There is no build step and nothing 
 
 **Almost every update happens in one file: `content.js`.** Edit it on GitHub (open the file, click the pencil icon, commit). The site updates within a minute or two.
 
+**`content.js` is public.** Anyone can read it. Never put student names, contact details, application data, banking details, private correspondence or internal governance notes in it. Internal records belong in the shared drive, not in this repository.
+
+**After editing `content.js`, refresh the static copy** so the site stays readable without JavaScript (see "Keeping the static HTML in sync" below). If you skip it, visitors with JavaScript still see the new content, but search engines and no-script visitors see the old copy.
+
 ## The files
 
 | File | What it is |
@@ -13,38 +17,71 @@ This site is plain HTML, CSS and JavaScript. There is no build step and nothing 
 | `express.html` | Partner Express, the 90-second executive summary |
 | `present.html` | Presentation mode for meetings (press F for full screen, N for notes) |
 | `prospectus.html` | The printable prospectus, and custom proposals from the builder |
-| `downloads/…Prospectus-2027.pdf` | The downloadable PDF (rebuild it after content changes, see below) |
-| `assets/css/` | Styles. `system.css` is shared; `ride.css` is the original Metro design; `sections.css` holds the newer sections |
+| `overview.html` | The one-page overview for internal champions and review committees |
+| `downloads/*.pdf` | The prospectus and one-page overview PDFs (rebuild them after content changes, see below) |
+| `assets/css/` | Styles. `system.css` is shared; `ride.css` is the original Metro design; `sections.css` and `readiness.css` hold the newer sections |
 | `assets/js/common.js` | Renders shared sections from `content.js`, and runs the partnership form |
 | `assets/js/ride.js` | Animations, sound, the train, the builder, the boarding gate |
 | `*.jpg` | Photos (kept in the root so existing links keep working) |
-| `tools/` | Scripts to rebuild the PDF and the share image |
+| `tools/` | Scripts to prerender the static HTML, rebuild the PDFs and the share image |
 
 ## Common updates
 
-**Change a number.** Find it in `metrics` and edit `value` (a plain number) and `display` (what shows, like `'102+'`). Always update `period` too. Set `status: 'verified'` once leadership has checked it against records.
+**Change a number.** Find it in `metrics` and edit `value` (a plain number) and `display` (what shows, like `'102+'`). Always update `period` too. Use `status: 'documented'` only when the figure matches a primary record (a form export, sign-in sheet, roster or campaign page). Use `'reported'` for figures from recaps or planning notes. Count people, not forms; label registrations as registrations; never add totals from different periods.
 
 **Add a new metric** (students served, mentorship connections, survey results). These already exist with `value: null`. Fill in `value`, `display`, `period` and an optional `note`. It appears automatically in the right category. Outcomes show only once a value exists.
 
-**Show the fall vs. spring application comparison.** Set `fall2026.basis` to `'applications'` if 21 was the number of fall applications, or `'fellows'` if it was the number of accepted fellows. It stays hidden while it says `'unverified'`.
+**Cohort growth.** The records show 21 was the fall 2026 cohort size, so `fall2026.basis` is `'fellows'` and no application growth claim is made. Edit `growth` to update the term-by-term bars. Planned seats are shown with a dashed bar and never as results.
 
 **Update a program.** Edit its entry in `programs`. Change `status` to `'confirmed'` when the date, venue and lineup are locked. Use `'tentative'` for anything uncertain. Do not list speakers or venues until they are confirmed.
 
-**Change partnership levels or benefits.** Edit `tiers`. `online: true` shows a Give button. `online: false` shows "Schedule a conversation". The fare chart, builder ladder, deck and PDF all update from the same list.
+**Change partnership packages or benefits.** Packages live in `tiers` and benefits in `benefits`. Each package lists its own `benefitIds`; never write "everything in the level below". Each benefit has a `scope` (per program, season, partnership or per gift), a `stack` rule, and `limited` / `approval` flags. The rules engine (`X.rules` in `assets/js/common.js`) reads these, and the builder, Partner Express, the deck, the prospectus, the one-page overview and generated proposals all use it. Core rules, which the tests enforce: titles come only from a package chosen explicitly, never from a total; designated support is confirmed before payment; only unrestricted gifts go to online checkout. After any change, run `python tools/test-rules.py`.
 
 **Add a sponsor or partner.** Add the name to the right list in `relationships`. Use `formal` only for written partnerships and `sponsor` only for organizations that have given money. A speaker's employer goes under `speaker`. Empty lists stay hidden.
 
 **Add a testimonial or story.** Add to `testimonials` (or `stories`) with `approved: true` only after you have written permission. Never name or quote a minor. The section stays hidden until one approved entry exists.
 
-**Publish a W-9 or IRS determination letter.** Put the PDF in `docs/public/`, then add `{ label: 'IRS determination letter', file: 'docs/public/your-file.pdf' }` to `documents`.
+**Documents.** `documents` lists what partners can ask for and whether it is listed here, available on request or in preparation. Change `availability` as documents become ready. Only add a `file` for a document cleared for publication, and never publish a document that shows a home address or signature (the IRS letter in the drive does, so send it on request instead).
 
 **Show fundraising progress.** Set `goals.raised` to a number and `goals.raisedAsOf` to a date.
 
 **Approved dollar-to-impact statements.** In `costAreas`, fill `equivalency` (for example `'$250 covers lunch for one workshop'`) only after it is confirmed against the budget.
 
+**Presentation.** `present.html` builds 12 slides from `content.js`. Add `?for=Organization%20Name` to personalize the opening and role slides. Presenter view opens private notes in a second window. Sound is off until the presenter turns it on. `present.html?print=1` is what the offline deck PDF is made from.
+
 **Add a scheduling link.** Paste a Calendly or Google booking link into `links.booking`. Every "Schedule a conversation" button switches from email to that link.
 
 **Photos of younger students.** List any such photo in `photos` with `minors: true`. These stay out of the PDF and share images. Confirm media consent before publishing any photo of a minor.
+
+**Timeline, continuity, tracks, rooms.** Edit `timeline`, `continuity`, `portfolios` and `rooms`. In `continuity`, move an item from `'in-progress'` to `'in-place'` only when it is actually operating. In `rooms`, every story must come from an event record; never invent a quote, and never name or quote a younger student.
+
+**Governance.** `org.governance.summary` is shown on the site, the prospectus and the one-page overview. Update it the day the Board is seated, and add members to `org.leadership` only once elected.
+
+## Tests
+
+With the site served locally (`python -m http.server 8765` in the repository folder):
+
+```bash
+python tools/test-rules.py     # partnership rules and builder, 53 scenarios
+python tools/test-site.py      # site behavior, accessibility and mobile, 40 checks
+python tools/test-deck.py      # presentation: transitions, sound timing, fit at 5 screen sizes
+python tools/test-endpoint.py  # form success and failure handling against a mock endpoint
+```
+
+Set `CHROME_PATH` if Playwright's own Chromium is not installed. Run all four before publishing.
+
+## Keeping the static HTML in sync
+
+The essential sections are written into the HTML files as well, between `<!--pre-->` and `<!--/pre-->` markers, so the site is readable if JavaScript fails. After editing `content.js`:
+
+```bash
+pip install playwright
+python -m playwright install chromium
+python tools/prerender.py
+python tools/build-prospectus.py
+```
+
+Commit the changed HTML files and the three PDFs (prospectus, one-page overview, pitch deck). Never edit text between the `pre` markers by hand; it is overwritten on the next run.
 
 ## Receiving form submissions directly
 
@@ -59,9 +96,9 @@ To receive submissions directly instead:
 
 Never put API keys, passwords or private tokens in any file in this repository.
 
-## Rebuilding the PDF prospectus
+## Rebuilding the PDFs
 
-The PDF is generated from `prospectus.html`, so it always matches `content.js`. After content changes:
+The prospectus PDF is generated from `prospectus.html` and the one-page overview from `overview.html`, so both always match `content.js`. After content changes:
 
 ```bash
 pip install playwright
@@ -69,7 +106,7 @@ python -m playwright install chromium
 python tools/build-prospectus.py
 ```
 
-Commit the updated `downloads/BRIDGE-the-District-Partnership-Prospectus-2027.pdf`. The script warns you if any page overflows. If it does, shorten the copy. Anyone can also open `prospectus.html` and use Print, then Save as PDF.
+Commit both files in `downloads/`. The script warns you if any page overflows. If it does, shorten the copy. Anyone can also open `prospectus.html` and use Print, then Save as PDF.
 
 The share image (`assets/og-image.jpg`) comes from `tools/og-image.html`. Open it at 1200 by 630 pixels and screenshot it if you need to change it.
 
