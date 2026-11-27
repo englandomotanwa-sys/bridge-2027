@@ -728,6 +728,16 @@ body.phone .nextsign .v{flex:1}
 body.phone.present main>section{min-height:calc(100svh - 96px)}
 body.phone.present{scroll-snap-type:none;overflow:hidden}
 body.phone .pager{bottom:78px}
+
+.books600{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.books600 b{display:inline-flex;font:900 clamp(64px,8vw,110px)/1 Archivo,sans-serif;color:#ffd27a;letter-spacing:-.04em}
+.books600 b i,.books600 .sep{color:#ffd27a;font-style:normal}
+.books600>span{font:700 18px Archivo,sans-serif;color:#fff;max-width:14ch}
+.bkr p strong{color:#fff}
+.bkr-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.bkr-photos figure{position:relative;margin:0;border-radius:14px;overflow:hidden}
+.bkr-photos img{display:block;width:100%;height:150px;object-fit:cover}
+.shelf{height:80px}
 /* ===== metro everywhere ===== */
 .band.dark{background-image:linear-gradient(#ffffff07 2px,transparent 2px),linear-gradient(90deg,#ffffff07 2px,transparent 2px),radial-gradient(circle,#ffffff06 0 17px,transparent 18px);background-size:64px 64px;background-position:-2px -2px,-2px -2px,30px 30px}
 .gap,.spot,.how,.faq,#why,#moments,#proof{background-image:linear-gradient(#0b163308 2px,transparent 2px),linear-gradient(90deg,#0b163308 2px,transparent 2px);background-size:64px 64px}
@@ -823,7 +833,7 @@ body.phone .pager{bottom:78px}
 </nav>
 <div class="ticker">
  <button class="lbl" id="chime" aria-label="Play the door chime"><i class="bell"></i>Operator</button>
- <div class="run" aria-label="Train operator announcements"><span id="tick">This is a BRIDGE Line train to Spring 2027. &nbsp;◆&nbsp; Doors opening. &nbsp;◆&nbsp; 102 students applied to ride this season. &nbsp;◆&nbsp; Next stop: Winter Fundraiser, January 9. &nbsp;◆&nbsp; Please move to the center of the car and make room for more students. &nbsp;◆&nbsp; Transfer here for BRIDGE to Medicine, Policy &amp; Law, and Media &amp; Entertainment. &nbsp;◆&nbsp; This train is run by students, for students, with students. &nbsp;◆&nbsp; Step back, doors closing. &nbsp;◆&nbsp; On the escalator: stand right, walk left. &nbsp;◆&nbsp; Please do not hold the doors. Another BRIDGE event is right behind this one. &nbsp;◆&nbsp; Partners board at every station. Fares from $250.</span></div>
+ <div class="run" aria-label="Train operator announcements"><span id="tick">This is a BRIDGE Line train to Spring 2027. &nbsp;◆&nbsp; Doors opening. &nbsp;◆&nbsp; 102 students applied to ride this season. &nbsp;◆&nbsp; Next stop: Winter Fundraiser, January 9. &nbsp;◆&nbsp; Please move to the center of the car and make room for more students. &nbsp;◆&nbsp; Transfer here for BRIDGE to Medicine, Policy &amp; Law, and Media &amp; Entertainment. &nbsp;◆&nbsp; This train is run by students, for students, with students. &nbsp;◆&nbsp; 600+ books given with Brown Kids Read and Our Kids Read. &nbsp;◆&nbsp; Step back, doors closing. &nbsp;◆&nbsp; On the escalator: stand right, walk left. &nbsp;◆&nbsp; Please do not hold the doors. Another BRIDGE event is right behind this one. &nbsp;◆&nbsp; Partners board at every station. Fares from $250.</span></div>
 </div>
 </header>
 <div class="rail" aria-hidden="true"><div class="f"></div><div class="t"></div></div>
@@ -1015,14 +1025,16 @@ body.phone .pager{bottom:78px}
   </div>
   <figure class="ridersphoto"><img src="rtr_all.jpg" alt="BRIDGE fellows in navy shirts standing behind the seated Read the Room panelists" loading="lazy"><figcaption class="cap">Read the Room: BRIDGE fellows with the panel they brought together</figcaption></figure>
   <div class="bkr">
-   <div class="bkr-photo"><img src="bkr_founder.jpg" alt="A Brown Kids Read leader, wearing a BKR pin, smiling on the Read the Room stage" loading="lazy"><span class="bkr-tag">Partner spotlight</span></div>
+   <div class="bkr-photo"><img src="bkr_founder.jpg" alt="A Brown Kids Read leader, wearing a BKR pin, smiling on the Read the Room stage" loading="lazy"><span class="bkr-tag">The literacy line</span></div>
    <div class="bkr-body">
-    <div class="bkr-kicker"><span class="ln"><i></i>BR</span>Transfer to the Brown Kids Read line</div>
-    <h3>We partnered with Brown Kids Read.</h3>
-    <p>Brown Kids Read was founded in 2018 by then-13-year-old Ssanyu Lukoma and grew from a single author event into a national 501(c)(3) that puts "mirror and window" books in young readers' hands.</p>
-    <p>For Banned Books Week we built Read the Room together: Brown Kids Read's founder on the panel, its president Gaelle Pierre moderating, and a book drive where every book donated went to Brown Kids Read to reach young readers.</p>
-    <div class="shelf" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    <div class="bkr-stats"><div><b>2018</b><span>founded, at age 13</span></div><div><b>National</b><span>501(c)(3) literacy nonprofit</span></div><div><b>Every book</b><span>donated went to young readers</span></div></div>
+    <div class="bkr-kicker"><span class="ln"><i></i>BR</span>Transfer here for Brown Kids Read and Our Kids Read</div>
+    <div class="books600"><b class="odo slow" data-to="600" data-s="+">600+</b><span>books put in young readers' hands</span></div>
+    <h3>Two literacy partners. Real classrooms.</h3>
+    <p>We partnered with <strong>Brown Kids Read</strong>, the national 501(c)(3) founded in 2018 by then-13-year-old Ssanyu Lukoma, and with <strong>Our Kids Read</strong>. Together we gave away more than 600 books.</p>
+    <p>Then we took it into elementary schools. BRIDGE fellows went into classrooms like Annunciation Catholic School to read, mentor and show younger students what college students who look like them are building.</p>
+    <div class="shelf" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="bkr-stats"><div><b>600+</b><span>books given</span></div><div><b>2</b><span>literacy partners</span></div><div><b>Elementary</b><span>school classroom visits</span></div></div>
+    <div class="bkr-photos"><figure><img src="kids.jpg" alt="BRIDGE fellows with younger students in a classroom" loading="lazy"><figcaption class="cap">In the classroom</figcaption></figure><figure><img src="rtr_all.jpg" alt="Read the Room fellows and panel" loading="lazy"><figcaption class="cap">Read the Room with Brown Kids Read</figcaption></figure></div>
    </div>
   </div>
   <div class="carrow"><div><h3 class="carh">104 people boarded in 24 hours.</h3><p class="lede">When BRIDGE asked its community to show up for BRIDGE to Impact, they filled the train. The next car is for partners.</p><div class="miniproof"><div><b>29%</b><span>past our campaign goal, hit by 4 PM</span></div><div><b>2026</b><span>Rising Futures Award from BUILD</span></div><div><b>501(c)(3)</b><span>Gifts are tax-deductible</span></div></div></div><div><div class="car" aria-label="104 supporters shown as riders filling a train car"><div class="car-top"><span>BR</span><b>BRIDGE to Impact · 24-hour campaign</b><span class="cnt" id="riderCnt">0 riders</span></div><div class="seats" id="seats"></div><div class="car-wheels"><i></i><i></i><i></i><i></i></div></div>
