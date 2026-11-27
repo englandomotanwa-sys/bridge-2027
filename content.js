@@ -63,14 +63,14 @@ window.BRIDGE = {
     ],
     /* The student leadership team, by role. Names are added only with each person's approval. */
     team: [
-      { role: 'Executive Director', text: 'Sets direction, holds partner relationships and approves spending above $1,000.' },
-      { role: 'Fellowship lead', text: 'Runs the Impact Scholar Fellowship, supervises Track Leads and approves spending up to $1,000.' },
+      { role: 'Executive Director', text: 'Sets direction and leads partner relationships.' },
+      { role: 'Fellowship lead', text: 'Runs the Impact Scholar Fellowship and supports the Track Leads.' },
       { role: 'Community and events lead', text: 'Leads fellow events, community programming and the BRIDGE brand.' },
       { role: 'Operations manager', text: 'Keeps the spring calendar, records and logistics moving.' },
-      { role: 'Track Leads', text: 'Nine returning Impact Scholars who lead the three tracks, interview applicants and approve spending under $250.' }
+      { role: 'Track Leads', text: 'Returning Impact Scholars who help lead the three tracks.' }
     ],
     governance: {
-      summary: 'BRIDGE is governed by bylaws adopted at incorporation, which provide for a volunteer Board of Directors of three to fifteen members. Board seats have not yet been filled. Seating the Board is a current leadership priority, and members will be listed publicly once elected. Day to day, the Executive Director leads a student leadership team under written role descriptions and spending limits.',
+      summary: 'BRIDGE is governed by bylaws adopted at incorporation, which provide for a volunteer Board of Directors of three to fifteen members. Board seats have not yet been filled. Day to day, the Executive Director leads a student leadership team.',
       status: 'in-progress'
     },
     recognition: [],
@@ -144,7 +144,7 @@ window.BRIDGE = {
   growth: [
     { label: '2025 to 2026 cohort', value: 18, kind: 'fellows', status: 'reported' },
     { label: 'Fall 2026 cohort', value: 21, kind: 'fellows', status: 'documented' },
-    { label: 'Spring 2027 seats', value: 40, kind: 'planned', status: 'planned', note: '16 Opportunity, 14 Community, 10 Leadership, plus 9 returning Track Leads' }
+    { label: 'Spring 2027 seats', value: 40, kind: 'planned', status: 'planned', note: 'Planned across the three tracks' }
   ],
 
   /* ---------- Methodology: how we count ---------- */
@@ -160,20 +160,20 @@ window.BRIDGE = {
   measurement: {
     current: [
       'Sign-in at every program, kept by the Impact Scholar running it',
-      'A written event record and recap within 48 hours of each program',
-      'Application records, reviewed by two readers and an interview panel',
+      'A written record of each program',
+      'Application review and interviews for the fellowship',
       'Public campaign records for every fundraising campaign',
       'Feedback forms and pre and post surveys at selected programs'
     ],
     planned: [
-      'One participant record that links attendance across programs, so we can report unique people',
-      'A standard five-question survey after every program',
-      'A start and end of term self-assessment for Impact Scholars',
-      'A 30-day check on mentoring connections made at programs',
-      'Partner-school feedback each term',
-      'An annual impact summary for partners'
+      'Participant records that link attendance across programs, so we can report unique people',
+      'A short survey after programs',
+      'A self-assessment for Impact Scholars',
+      'Follow-up on mentoring connections made at programs',
+      'Feedback from partner schools',
+      'Impact updates for partners'
     ],
-    plannedNote: 'Planned measures begin with the spring 2027 season. They are listed so partners know what to expect, not as results.'
+    plannedNote: 'These are measures we are building toward. They show our direction, not results, and they may change as we learn what works.'
   },
 
   /* ---------- The problem: outside data ---------- */
@@ -212,7 +212,7 @@ window.BRIDGE = {
     { date: 'Dec 29, 2025', kind: 'funding', title: 'BRIDGE to Impact', text: '106 supporters give $4,855 in 24 hours, 138% of the $3,500 goal.' },
     { date: 'Spring 2026', kind: 'program', title: 'A full spring season', text: 'BRIDGE to Media (February 17), College Immersion Day, BUILD DC Day at American University (March 26), Pizza & Professors and Voices of Impact (April).' },
     { date: 'Fall 2026', kind: 'fellowship', title: 'Three tracks, 21 scholars', text: 'The fellowship runs as three tracks: Opportunity, Community and Leadership. Programs include Read the Room (October 5), BRIDGE to Policy & Law (October 24), a Parkmont School college immersion day (November 18) and BRIDGE to Health (November 20).' },
-    { date: 'Nov 2026', kind: 'fellowship', title: '101 applicants for 40 seats', text: 'The spring application draws 101 college students. Nine returning fellows step up as Track Leads.' },
+    { date: 'Nov 2026', kind: 'fellowship', title: '101 applicants for 40 seats', text: 'The spring application draws 101 college students, and returning fellows step up as Track Leads.' },
     { date: 'Jan to Apr 2027', kind: 'plan', title: 'The spring BRIDGE Line', text: 'Ten planned programs, Friday school visits and the first founding-chapter application.' }
   ],
   timelineNote: 'BRIDGE was founded and began programming in summer 2025. Its legal recognition as a public charity dates from September 2025, effective July 9, 2025.',
@@ -220,16 +220,15 @@ window.BRIDGE = {
   /* ---------- Built for continuity ----------
      status: 'in-place' (operating now) | 'in-progress' (being built, with a date) */
   continuity: [
-    { name: 'Returning Track Leads', status: 'in-place', text: 'Nine returning Impact Scholars lead the three tracks, so experience carries from one cohort to the next.' },
+    { name: 'Returning Track Leads', status: 'in-place', text: 'Returning Impact Scholars help lead the three tracks, so experience carries from one cohort to the next.' },
     { name: 'A written library', status: 'in-place', text: 'The BRIDGE Library holds step-by-step guides, such as planning a program and hosting a school visit on campus, so no program depends on one person remembering how.' },
-    { name: 'A record of every program', status: 'in-place', text: 'Each program gets a sign-in sheet, a standard event record and a recap within 48 hours, filed in shared drives by term.' },
-    { name: 'Spending limits by role', status: 'in-place', text: 'Track Leads approve under $250, the fellowship lead up to $1,000, and the Executive Director above that.' },
+    { name: 'A record of every program', status: 'in-place', text: 'Programs are documented with sign-ins and event records, filed in shared drives by term.' },
     { name: 'A decision log', status: 'in-place', text: 'Leadership decisions are written down with the date and the reason, so new leaders can see why things are the way they are.' },
-    { name: 'Fair selection', status: 'in-place', text: 'Two readers score each application, two Track Leads score each interview on four criteria, and nobody scores someone they know.' },
+    { name: 'Structured selection', status: 'in-place', text: 'Applications are reviewed and applicants are interviewed against shared criteria.' },
     { name: 'Shared inboxes', status: 'in-place', text: 'Partners write to role inboxes, not personal accounts, so conversations survive leadership changes.' },
-    { name: 'Role cards and named backups', status: 'in-progress', text: 'Every leadership role is getting a written role card and a named backup in January 2027.' },
-    { name: 'End-of-term handoff', status: 'in-progress', text: 'Each term closes with a written handoff and archive. The first full cycle under this system ends in April 2027.' },
-    { name: 'A Board of Directors', status: 'in-progress', text: 'Our bylaws provide for a volunteer Board. Seats are not yet filled, and seating the Board is a current priority.' }
+    { name: 'Role cards and named backups', status: 'in-progress', text: 'Leadership roles are being written up as role cards, with backups.' },
+    { name: 'End-of-term handoff', status: 'in-progress', text: 'Terms close with a written handoff and an archive.' },
+    { name: 'A Board of Directors', status: 'in-progress', text: 'Our bylaws provide for a volunteer Board. Seats are not yet filled.' }
   ],
   continuityNote: 'A student-led organization has to plan for graduation every year. These are the systems that let BRIDGE outlast any one class of leaders. We mark what is operating now and what is still being built.',
 
@@ -251,7 +250,7 @@ window.BRIDGE = {
       serves: 'Impact Scholars preparing to lead, and college students exploring careers.',
       measures: 'Programs led by scholars, professionals engaged, partner follow-through.' }
   ],
-  portfolioNote: 'Seat counts are the spring 2027 plan, with nine returning Track Leads across the three tracks.',
+  portfolioNote: 'Seat counts are the current spring 2027 plan and may change.',
 
   /* ---------- The Rooms We Open: documented moments, no invented quotes ----------
      Each story is drawn from an event record. No younger student is named or quoted.
@@ -296,7 +295,7 @@ window.BRIDGE = {
       evidence: [ { type: 'measured', metricId: 'programs' }, { type: 'activity', text: '{programs} programs are planned for spring 2027, January to April, plus six Friday school visits.' } ] },
     { id: 'scholars', name: 'College students developed as Impact Scholars and community leaders', short: 'Impact Scholars', kind: 'transfer',
       text: 'The transfer station. College students train as Impact Scholars, then design, host and lead each program. Every investment passes through them.',
-      evidence: [ { type: 'measured', metricId: 'fellows' }, { type: 'measured', metricId: 'apps' }, { type: 'output', text: 'Returning scholars become Track Leads: nine for spring 2027.' } ] },
+      evidence: [ { type: 'measured', metricId: 'fellows' }, { type: 'measured', metricId: 'apps' }, { type: 'output', text: 'Returning scholars become Track Leads.' } ] },
     { id: 'college', name: 'Pathway one: college students', short: 'College students', kind: 'branch', line: 'red',
       text: 'College students gain leadership experience, professional exposure, mentors and access to professional networks.',
       evidence: [ { type: 'activity', text: 'Students moderated panels, sat beside professionals and negotiated amendments in a mock committee.' }, { type: 'measured', metricId: 'speakers' }, { type: 'intended', text: 'Leadership experience and professional relationships that carry into careers. Measured from spring 2027 with a start and end of term self-assessment.' } ] },
@@ -455,7 +454,7 @@ window.BRIDGE = {
       { k: 'The moment', text: 'Applications rose to 101 for 40 spring seats. The fellowship has grown each term, from 18 scholars to 21 to a planned 40.' },
       { k: 'The ask', text: 'A $10,000 spring goal, built as forty commitments of $250. It funds ten programs, school visits and the training that lets new scholars lead them.' }
     ],
-    goalNote: 'The spring budget is being finalized for leadership approval. Partners who fund a specific program receive a report on how their gift was used.'
+    goalNote: 'The spring budget is being finalized. Ask us how a specific gift would be used.'
   },
 
   /* ---------- Kinds of funding, and how each works ---------- */
@@ -466,7 +465,7 @@ window.BRIDGE = {
     { id: 'grant', name: 'Grant', text: 'Foundation or institutional funding under a written agreement with its own reporting terms.' },
     { id: 'inkind', name: 'In-kind contribution', text: 'Goods, space or services. We acknowledge what was given; we do not assign it a dollar value.' }
   ],
-  fundingNote: 'Ask your own tax advisor how a gift or sponsorship is treated for you. BRIDGE provides a written acknowledgment for every gift.',
+  fundingNote: 'Ask your own tax advisor how a gift or sponsorship is treated for you. BRIDGE provides gift acknowledgments.',
 
   /* ---------- How partnership works (requires leadership approval before publication) ---------- */
   principles: [
@@ -501,7 +500,7 @@ window.BRIDGE = {
        duration, owner: what it lasts and who fulfills it */
   benefits: {
     ack:          { short: 'Written acknowledgment', label: 'A written acknowledgment of your support', scope: 'per-gift', stack: 'once', duration: 'Sent after payment is received', owner: 'Operations manager' },
-    recap:        { short: 'Program recap', label: 'A short written recap from the scholars who ran the program', scope: 'per-program', stack: 'per-program', duration: 'Within two weeks of the program', owner: 'Track Lead' },
+    recap:        { short: 'Program recap', label: 'A short written recap from the scholars who ran the program', scope: 'per-program', stack: 'per-program', duration: 'After the program', owner: 'Track Lead' },
     invite:       { short: 'Invitation to attend', label: 'An invitation to attend the program and meet the scholars', scope: 'per-program', stack: 'per-program', duration: 'That program only', owner: 'Track Lead' },
     moment:       { short: 'Named moment (limited)', label: 'A named moment at the program, such as "Lunch presented by"', scope: 'per-program', stack: 'per-program', limited: true, approval: true, duration: 'That program only', owner: 'Track Lead' },
     progPresent:  { short: 'Presenting one program (limited)', label: 'Presenting acknowledgment for one program', scope: 'per-program', stack: 'per-program', limited: true, approval: true, duration: 'That program only', owner: 'Executive Director' },
@@ -552,7 +551,7 @@ window.BRIDGE = {
   },
   tierNote: 'All levels and benefits are proposed for the 2027 season and require confirmation. Titles come only from the package you choose, never from your total. Limited benefits, such as named moments and presenting acknowledgment, are confirmed in writing before they are promised.',
   lifecycle: ['Exploring', 'Proposed selections', 'Inquiry sent', 'Initial review', 'Conversation', 'Written proposal', 'Availability confirmed', 'Agreement approved', 'Payment or commitment', 'Partnership active', 'Benefits delivered', 'Impact report', 'Renewal'],
-  changePolicy: 'If a program you support is rescheduled, we tell you and your support follows the new date. If it changes substantially or is canceled, we ask you to choose another program, unrestricted use, or a refund, and we record your choice in writing. We never redirect a designated gift without your consent.',
+  changePolicy: 'If a program you support changes or is canceled, we will contact you to talk through the options. We do not redirect a designated gift without talking with you first.',
 
   /* ---------- Ways to give beyond the levels ---------- */
   supportTypes: [
@@ -570,13 +569,13 @@ window.BRIDGE = {
      time: a realistic lead time. */
   audiences: [
     { id: 'individual', name: 'Individual donors', ways: ['Any amount, online', 'Station Supporter or Station Partner', 'Monthly giving, set up with our team'], tiers: ['supporter', 'partner'], support: ['unrestricted', 'recurring'],
-      steps: ['Give online or email us', 'Receive a written acknowledgment', 'Get a recap from the program you backed'], docs: ['Gift acknowledgment', 'EIN'], time: 'Same day' },
+      steps: ['Give online or email us', 'Receive a gift acknowledgment'], docs: ['Gift acknowledgment', 'EIN'], time: 'Same day' },
     { id: 'local', name: 'Local businesses', ways: ['Name a moment at a program', 'Food, printing, space or prizes in-kind', 'Station Partner or Line Partner'], tiers: ['partner', 'line'], support: ['inkind', 'program'],
       steps: ['Pick a program and a moment', 'Confirm by email what you will provide', 'Join us at the program'], docs: ['W-9', 'Gift acknowledgment'], time: 'Two to four weeks before the program' },
     { id: 'corporate', name: 'Corporations', ways: ['Present a program', 'Employee mentors and volunteer days', 'A season or year-long partnership'], tiers: ['founding', 'seasonpresenting', 'institutional'], support: ['volunteer', 'mentor', 'custom'],
       steps: ['A first conversation about your goals', 'A written proposal from BRIDGE', 'Your internal review', 'A short agreement and a planning call'], docs: ['IRS determination letter', 'W-9', 'Program budget', 'Possibly a certificate of insurance'], time: 'Six to twelve weeks' },
     { id: 'association', name: 'Firms and professional associations', ways: ['Speakers and mentors for an industry program', 'Member engagement with students', 'Line Partner or Founding Rider'], tiers: ['line', 'founding'], support: ['mentor', 'program'],
-      steps: ['Choose an industry program', 'Match speakers or mentors to it', 'Confirm roles a month ahead'], docs: ['Program outline', 'IRS determination letter'], time: 'Four to eight weeks' },
+      steps: ['Choose an industry program', 'Match speakers or mentors to it', 'Confirm roles ahead of the program'], docs: ['Program outline', 'IRS determination letter'], time: 'Four to eight weeks' },
     { id: 'university', name: 'Universities', ways: ['Space for programs', 'Campus visits for younger students', 'Co-designed programs with student groups'], tiers: [], support: ['inkind', 'custom'],
       steps: ['Identify the office or student group', 'Agree on space, dates and roles', 'Follow the campus event process'], docs: ['Event details', 'Campus visit plan'], time: 'One term ahead' },
     { id: 'school', name: 'K to 12 schools', ways: ['Friday school visits with Impact Scholars', 'A college immersion day on campus', 'Capstone and mentoring projects'], tiers: [], support: ['custom'],
@@ -593,9 +592,9 @@ window.BRIDGE = {
   champion: {
     intro: 'Bringing BRIDGE to your organization? These are the pieces most people need for an internal conversation.',
     short: 'BRIDGE the District is a student-powered 501(c)(3) in Washington, DC (EIN 39-3160840). It trains college students as Impact Scholars, who plan and lead career, civic and community programs and bring younger students from DC schools onto campuses and into professional rooms. In 2026 its fellowship grew from 18 to 21 scholars, and 101 students applied for 40 spring 2027 seats.',
-    recommendation: 'I recommend that we support BRIDGE the District for its spring 2027 season. BRIDGE is a registered 501(c)(3) led by college students, who run programs that connect DC students with professionals in fields like ours. The partnership I am proposing is [level or program], at [amount], which would [specific program or engagement]. It fits our [community, talent or education] goals because [reason]. BRIDGE has run comparable programs, including BRIDGE to Policy & Law with more than 60 attendees in October 2026. They can provide their IRS determination letter and a written acknowledgment, and they will send a recap after the program. I suggest we confirm by [date] so the engagement can be planned with the student team.',
+    recommendation: 'I recommend that we support BRIDGE the District for its spring 2027 season. BRIDGE is a registered 501(c)(3) led by college students, who run programs that connect DC students with professionals in fields like ours. The partnership I am proposing is [level or program], at [amount], which would [specific program or engagement]. It fits our [community, talent or education] goals because [reason]. BRIDGE has run comparable programs, including BRIDGE to Policy & Law with more than 60 attendees in October 2026. They can provide their IRS determination letter and a gift acknowledgment. I suggest we confirm by [date] so the engagement can be planned with the student team.',
     funding: 'Spring 2027 goal: $10,000, built as forty commitments of $250. Gifts can be unrestricted or directed to one of ten planned programs. Levels run from $250 to $10,000 and up; gifts of $5,000 and up start with a planning conversation.',
-    process: ['Email info@bridgethedistrict.org with the subject "Documentation request".', 'Tell us which documents you need and your deadline.', 'We reply with what we can send, and when. If something is not yet available, we will say so plainly.']
+    process: ['Email info@bridgethedistrict.org with the subject "Documentation request".', 'Tell us which documents you need and your deadline.', 'We will let you know what we can share.']
   },
 
   /* ---------- Every Fare Opens a Door: what funding pays for ----------
@@ -683,14 +682,14 @@ window.BRIDGE = {
     { group: 'giving', q: 'What is the difference between unrestricted and program gifts?', a: 'An unrestricted gift funds whatever the season needs most, including the training and coordination behind every program. A program gift is directed to one program you choose, and we use it for that program. If a program changes, we ask you before redirecting a restricted gift.' },
     { group: 'giving', q: 'What is the difference between a gift and a sponsorship?', a: 'A gift receives a thank-you and nothing else in return. A sponsorship is acknowledged by name at a program. In both cases, recognition is an acknowledgment, not advertising, and it does not mean BRIDGE endorses your products.' },
     { group: 'giving', q: 'Can we give something other than money?', a: 'Yes. Food, books, space, transportation, printing, photo and video, supplies and prizes all keep a program running. So does your team\'s time and expertise.' },
-    { group: 'organization', q: 'Who governs BRIDGE?', a: 'BRIDGE is a DC nonprofit corporation governed by bylaws adopted at incorporation, which provide for a volunteer Board of Directors. Board seats have not yet been filled, and seating the Board is a current priority. Until then, the Executive Director leads a student leadership team under written role descriptions and spending limits.' },
-    { group: 'organization', q: 'Who runs BRIDGE day to day?', a: 'Co-Founder and Executive Director England Meadows leads BRIDGE with a student leadership team: a fellowship lead, a community and events lead, an operations manager and nine returning Track Leads.' },
-    { group: 'organization', q: 'What happens when student leaders graduate?', a: 'Continuity is designed in. Returning scholars become Track Leads, every program is documented in a shared library, partners write to shared inboxes, and each term ends with a written handoff. See Built for Continuity on this page.' },
-    { group: 'organization', q: 'What documents can you provide?', a: 'Our IRS determination letter, certificate of incorporation and bylaws are available on request. A W-9, a spring program budget and a certificate of insurance are in preparation. Email info@bridgethedistrict.org with the subject "Documentation request" and we will tell you what we can send and when.' },
-    { group: 'organization', q: 'How do you manage money?', a: 'Spending is approved by role: Track Leads under $250, the fellowship lead up to $1,000 and the Executive Director above that. Gifts for a specific program are used for that program, and program partners receive a report on how their gift was used. BRIDGE is a young organization and has not had a financial audit.' },
-    { group: 'students', q: 'How do you protect students?', a: 'We never share student names, contact details or rosters with partners, and we never name or quote younger students publicly. Work with younger students happens with partner schools, under each school\'s rules. Ask us for the specific safety requirements of any program you would join; we will share them in writing, and we will tell you plainly if something you need is not yet in place.' },
-    { group: 'students', q: 'How are Impact Scholars selected?', a: 'Two readers score each application. Shortlisted applicants join a group interview scored by two Track Leads on four criteria, and nobody scores someone they know. Applicants who are not selected are invited to stay connected, and alternates are ranked.' },
-    { group: 'students', q: 'How do you measure impact?', a: 'Today we document sign-ins, event records, applications and campaign results, with a date on every figure. Starting in spring 2027 we add a standard post-program survey, a scholar self-assessment, a 30-day mentoring check and partner-school feedback. We publish outcome figures only once they are collected and reviewed.' },
+    { group: 'organization', q: 'Who governs BRIDGE?', a: 'BRIDGE is a DC nonprofit corporation governed by bylaws adopted at incorporation, which provide for a volunteer Board of Directors. Board seats have not yet been filled. Day to day, the Executive Director leads a student leadership team.' },
+    { group: 'organization', q: 'Who runs BRIDGE day to day?', a: 'Co-Founder and Executive Director England Meadows leads BRIDGE with a student leadership team: a fellowship lead, a community and events lead, an operations manager and returning Track Leads.' },
+    { group: 'organization', q: 'What happens when student leaders graduate?', a: 'Continuity is designed in. Returning scholars become Track Leads, programs are documented in a shared library, and partners write to shared inboxes rather than personal accounts. See Built for Continuity on this page.' },
+    { group: 'organization', q: 'What documents can you provide?', a: 'Our IRS determination letter, certificate of incorporation and bylaws are available on request. A W-9, a spring program budget and a certificate of insurance are in preparation. Email info@bridgethedistrict.org with the subject "Documentation request" and we will let you know what we can share.' },
+    { group: 'organization', q: 'How do you manage money?', a: 'Gifts for a specific program are used for that program. BRIDGE is a young organization and has not had a financial audit. Ask us about the financial information you need.' },
+    { group: 'students', q: 'How do you protect students?', a: 'We never share student names, contact details or rosters with partners, and we never name or quote younger students publicly. Work with younger students happens with partner schools, under each school\'s rules. Ask us about the requirements for any program you would join.' },
+    { group: 'students', q: 'How are Impact Scholars selected?', a: 'Applications are reviewed, and shortlisted applicants are interviewed against shared criteria. Applicants who are not selected are invited to stay connected.' },
+    { group: 'students', q: 'How do you measure impact?', a: 'Today we document sign-ins, event records, applications and campaign results, with a date on every figure. We are building toward post-program surveys, scholar self-assessments, mentoring follow-up and partner-school feedback. We publish outcome figures only once they are collected and reviewed.' },
     { group: 'partnership', q: 'Does a speaker\'s organization become a partner?', a: 'No. When professionals speak at BRIDGE, they take part in their individual capacity. We list formal partners and sponsors separately, and we do not list prospective partners at all.' },
     { group: 'partnership', q: 'Does partnership give us access to students for recruiting?', a: 'No. Partnership does not include student contact details, rosters or a hiring pipeline. Students meet professionals at programs and decide for themselves whether to stay in touch.' },
     { group: 'partnership', q: 'Can we choose which program we support?', a: 'Yes. Choose any program on the line, take the season pass to support them all, or give unrestricted support.' },
